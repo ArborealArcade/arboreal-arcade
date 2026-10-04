@@ -1,0 +1,35 @@
+{
+  "name": "arboreal-planet",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "migrate:legacy": "node scripts/materialize-keeper-sprite-assets.mjs && node scripts/install-chondro-pairing-lab.mjs && node scripts/fix-gtp-family-tree-ancestry.mjs && node scripts/apply-chondro-patches.mjs && node scripts/migrate-arboreal-keeper-api-paths.mjs && node scripts/normalize-arboreal-keeper-branding.mjs && node scripts/apply-keeper-dock-icons.mjs && node scripts/move-keeper-program-hub-home.mjs",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc -p tsconfig.test.json && node --test \".test-dist/tests/*.test.js\"",
+    "test:clean": "rm -rf .test-dist"
+  },
+  "dependencies": {
+    "@simplewebauthn/browser": "^14.0.0",
+    "@simplewebauthn/server": "^14.0.2",
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

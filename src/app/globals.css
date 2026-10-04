@@ -1,0 +1,307 @@
+@import "tailwindcss";
+
+:root {
+  --background: #06100c;
+  --background-2: #081610;
+  --foreground: #f4f7f5;
+  --surface: #0b1812;
+  --surface-2: #102219;
+  --green: #39e67d;
+  --green-bright: #5cff95;
+  --muted: #a4b0aa;
+  --muted-soft: rgba(226,235,230,.58);
+  --border: rgba(255,255,255,.075);
+  --border-strong: rgba(255,255,255,.12);
+  --radius-card: 24px;
+  --radius-panel: 28px;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--background); scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 74% -8%, rgba(57,230,125,.10), transparent 28%),
+    radial-gradient(circle at -5% 28%, rgba(41,107,75,.07), transparent 23%),
+    linear-gradient(180deg, #06100c 0%, #07110d 58%, #050c09 100%);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+::selection { background: rgba(57,230,125,.3); }
+
+:focus-visible {
+  outline: 2px solid rgba(92,255,149,.7);
+  outline-offset: 3px;
+}
+
+.section-kicker {
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: .20em;
+  text-transform: uppercase;
+  color: rgba(117,243,171,.82);
+}
+
+.panel {
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,.034), rgba(255,255,255,.018));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025), 0 18px 48px rgba(0,0,0,.13);
+}
+
+.panel-soft {
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.021);
+}
+
+.interactive-card {
+  transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+.interactive-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(92,255,149,.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 22px 54px rgba(0,0,0,.18);
+}
+
+.primary-action,
+.secondary-action {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 800;
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+}
+.primary-action {
+  border: 1px solid rgba(92,255,149,.1);
+  background: #5cff95;
+  color: #05100b;
+}
+.primary-action:hover { background: #82ffad; transform: translateY(-1px); }
+.secondary-action {
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.025);
+  color: rgba(255,255,255,.7);
+}
+.secondary-action:hover { border-color: rgba(92,255,149,.22); color: #dfffea; background: rgba(92,255,149,.035); }
+
+.muted-copy { color: var(--muted-soft); }
+
+.grid-surface {
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.noise-surface { position: relative; }
+.noise-surface::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: .028;
+  background-image: radial-gradient(circle, #fff 0.7px, transparent 0.7px);
+  background-size: 8px 8px;
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
+}
+
+.mobile-nav-item {
+  display: flex;
+  min-width: 0;
+  min-height: 46px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 12px;
+  transition: background .18s ease, color .18s ease;
+}
+.mobile-nav-item:active { background: rgba(255,255,255,.04); }
+.mobile-nav-icon { font-size: 17px; line-height: 1; }
+.mobile-nav-label { font-size: 8px; line-height: 1; letter-spacing: .05em; }
+
+.chart-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size: 100% 25%, 16.666% 100%;
+}
+
+.hide-scrollbar { scrollbar-width: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+
+@media (max-width: 640px) {
+  .panel { box-shadow: none; }
+  .section-kicker { letter-spacing: .17em; }
+}
+
+@keyframes arcade-load-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.arcade-load-progress { animation: arcade-load-progress 3s linear forwards; }
+
+/* Conservation map subspecies focus */
+:has(> img[src$="/hatchery/chondro-subspecies-map-art.webp"]) {
+  position: relative;
+  isolation: isolate;
+}
+:has(> img[src$="/hatchery/chondro-subspecies-map-art.webp"]) > img {
+  position: relative;
+  z-index: 1;
+  transition: filter .28s ease, opacity .28s ease;
+}
+:has(> img[src$="/hatchery/chondro-subspecies-map-art.webp"])::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  bottom: clamp(86px, 17%, 122px);
+  border-radius: 18px;
+  opacity: .92;
+  transition: background .28s ease, filter .28s ease, opacity .28s ease;
+  mix-blend-mode: screen;
+}
+:has(> img[src$="/hatchery/chondro-subspecies-map-art.webp"]):has(button:nth-child(1)[class*="bg-emerald-200"])::after {
+  background: radial-gradient(ellipse at 43% 19%, rgba(255,107,10,.88) 0 8%, rgba(255,107,10,.40) 15%, transparent 28%);
+  filter: drop-shadow(0 0 18px rgba(255,107,10,.72));
+}
+:has(> img[src$="/hatchery/chondro-subspecies-map-art.webp"]):has(button:nth-child(2)[class*="bg-emerald-200"])::after {
+  background: radial-gradient(ellipse at 24% 37%, rgba(74,169,255,.92) 0 15%, rgba(35,135,238,.42) 28%, transparent 47%);
+  filter: drop-shadow(0 0 20px rgba(35,135,238,.75));
+}
+:has(> img[src$="/hatchery/chondro-subspecies-map-art.webp"]):has(button:nth-child(3)[class*="bg-emerald-200"])::after {
+  background: radial-gradient(ellipse at 66% 31%, rgba(255,225,25,.90) 0 17%, rgba(255,225,25,.38) 31%, transparent 50%);
+  filter: drop-shadow(0 0 20px rgba(255,225,25,.70));
+}
+:has(> img[src$="/hatchery/chondro-subspecies-map-art.webp"]):has(button:nth-child(4)[class*="bg-emerald-200"])::after {
+  background:
+    radial-gradient(ellipse at 56% 63%, rgba(71,214,91,.78) 0 23%, rgba(29,127,42,.36) 41%, transparent 62%),
+    radial-gradient(circle at 8% 59%, rgba(71,214,91,.62) 0 6%, transparent 14%);
+  filter: drop-shadow(0 0 20px rgba(57,230,125,.62));
+}
+@media (max-width: 640px) {
+  :has(> img[src$="/hatchery/chondro-subspecies-map-art.webp"])::after {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 116px;
+  }
+}
+
+/* Arboreal Keeper store liveliness */
+@keyframes keeper-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+@keyframes keeper-pop-in {
+  from { opacity: 0; transform: scale(.94) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes keeper-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes keeper-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes keeper-featured-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(252,211,77,0); }
+  50% { box-shadow: 0 0 26px rgba(252,211,77,.28); }
+}
+@keyframes keeper-pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+.anim-keeper-float { animation: keeper-float 5.5s ease-in-out infinite; }
+.anim-keeper-pop-in { animation: keeper-pop-in .3s cubic-bezier(.2,.9,.25,1.15) both; }
+
+/* Arboreal Keeper intro cinematic — staged stills + CSS Ken Burns.
+   The design degrades gracefully: transitions are CSS gold-flash
+   cross-dissolves, and reduced-motion clients get static stills. */
+@keyframes cinematic-kb-push {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.14); }
+}
+@keyframes cinematic-kb-drift {
+  from { transform: scale(1.1) translateX(-2.5%); }
+  to { transform: scale(1.1) translateX(2.5%); }
+}
+@keyframes cinematic-kb-package {
+  from { transform: scale(1.02) translate(0, 0); }
+  to { transform: scale(1.35) translate(10%, -12%); }
+}
+@keyframes cinematic-kb-rise {
+  from { transform: scale(1.14) translateY(2%); }
+  to { transform: scale(1.02) translateY(0); }
+}
+@keyframes cinematic-copy-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.anim-cinematic-kb-push { animation: cinematic-kb-push linear both; }
+.anim-cinematic-kb-drift { animation: cinematic-kb-drift linear both; }
+.anim-cinematic-kb-package { animation: cinematic-kb-package linear both; }
+.anim-cinematic-kb-rise { animation: cinematic-kb-rise linear both; }
+.anim-cinematic-copy-in { animation: cinematic-copy-in .6s ease both; }
+@media (prefers-reduced-motion: reduce) {
+  .anim-cinematic-kb-push,
+  .anim-cinematic-kb-drift,
+  .anim-cinematic-kb-package,
+  .anim-cinematic-kb-rise,
+  .anim-cinematic-copy-in { animation: none; }
+}
+.anim-keeper-fade-up { animation: keeper-fade-up .45s ease both; }
+.anim-keeper-backdrop-in { animation: keeper-backdrop-in .2s ease both; }
+.anim-keeper-pulse-soft { animation: keeper-pulse-soft 1.6s ease-in-out infinite; }
+.keeper-featured { animation: keeper-featured-glow 3.2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+/* Canopy Hunter — river port trader shop placeholder motion (until the */
+/* trader's animation loops land). */
+@keyframes port-drift {
+  from { transform: translateX(-1.5%); }
+  to { transform: translateX(1.5%); }
+}
+@keyframes pickup-glint {
+  0%, 100% { transform: translateY(0) scale(1); filter: brightness(1); }
+  50% { transform: translateY(-6px) scale(1.07); filter: brightness(1.3); }
+}
+
+@keyframes port-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+@keyframes port-glow {
+  0%, 100% { opacity: .55; }
+  50% { opacity: .95; }
+}
+
+/* Canopy Hunter — port arrival: slow push-in as the boat pulls up. */
+@keyframes port-arrive {
+  from { transform: scale(1.12); }
+  to { transform: scale(1); }
+}
