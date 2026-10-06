@@ -1,7 +1,17 @@
-const SUPABASE_URL = "https://ykaqnxajszwgeqkmaora.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_tYr_JfyA_WTGk8qNkL93iw_8uknK50C";
+// Arcade Supabase project (arboreal-arcade, zuhovlszrohwtdxqrhnx). Must NEVER
+// fall back to Planet's project or key — see src/lib/supabase-auth.ts.
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://zuhovlszrohwtdxqrhnx.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
 
 export async function supabasePublicFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  if (!SUPABASE_PUBLISHABLE_KEY) {
+    throw new Error(
+      "Arcade Supabase is not configured: set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY " +
+        "to the Arcade Supabase project's publishable key. This app intentionally " +
+        "carries no Planet credential fallback."
+    );
+  }
   const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...init,
     headers: {
