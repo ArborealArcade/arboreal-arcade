@@ -11,6 +11,7 @@
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
+
 -- §1 chondro_game_saves: add version (Planet reads/writes it; Arcade lacked it)
 -- ----------------------------------------------------------------------------
 ALTER TABLE public.chondro_game_saves
@@ -322,7 +323,49 @@ REVOKE ALL ON TABLE public.chondro_player_market FROM public, anon, authenticate
 GRANT SELECT, INSERT ON TABLE public.chondro_player_market TO authenticated;
 
 -- ----------------------------------------------------------------------------
--- §10 RPCs (bodies transcribed from Planet's live database, 2026-10-08)
+-- §10 chondro_account_grants — one-time bonus ledger (bonus RPC's dupe guard)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.chondro_account_grants (
+  user_id uuid NOT NULL,
+  grant_key text NOT NULL,
+  amount integer NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, grant_key)
+);
+
+ALTER TABLE public.chondro_account_grants ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS account_grants_read_own ON public.chondro_account_grants;
+CREATE POLICY account_grants_read_own ON public.chondro_account_grants
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+REVOKE ALL ON TABLE public.chondro_account_grants FROM public, anon, authenticated;
+GRANT SELECT ON TABLE public.chondro_account_grants TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- §11 chondro_conservation_market_intakes — purebreds acquired via settlement
+-- Written only by settle_chondro_market_cycle() (SECURITY DEFINER); no direct
+-- player access. RLS enabled with no policies = deny by default.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.chondro_conservation_market_intakes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  market_listing_id uuid NOT NULL UNIQUE
+    REFERENCES public.chondro_player_market(id) ON DELETE CASCADE,
+  snake_id text NOT NULL,
+  subspecies text NOT NULL,
+  phenotype_score numeric NOT NULL DEFAULT 0,
+  generation integer NOT NULL DEFAULT 1,
+  locality_ancestry jsonb NOT NULL DEFAULT '{}'::jsonb,
+  acquired_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.chondro_conservation_market_intakes ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON TABLE public.chondro_conservation_market_intakes FROM public, anon, authenticated;
+
+-- ----------------------------------------------------------------------------
+-- §12 RPCs (bodies transcribed from Planet's live database, 2026-10-08)
 -- ----------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION public.buy_chondro_player_market_listing(p_listing_id uuid)
@@ -987,48 +1030,6 @@ BEGIN
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.%I TO authenticated', fn);
   END LOOP;
 END $$;
-
--- ----------------------------------------------------------------------------
--- §11 chondro_account_grants — one-time bonus ledger (bonus RPC's dupe guard)
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.chondro_account_grants (
-  user_id uuid NOT NULL,
-  grant_key text NOT NULL,
-  amount integer NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (user_id, grant_key)
-);
-
-ALTER TABLE public.chondro_account_grants ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS account_grants_read_own ON public.chondro_account_grants;
-CREATE POLICY account_grants_read_own ON public.chondro_account_grants
-  FOR SELECT TO authenticated
-  USING (auth.uid() = user_id);
-
-REVOKE ALL ON TABLE public.chondro_account_grants FROM public, anon, authenticated;
-GRANT SELECT ON TABLE public.chondro_account_grants TO authenticated;
-
--- ----------------------------------------------------------------------------
--- §12 chondro_conservation_market_intakes — purebreds acquired via settlement
--- Written only by settle_chondro_market_cycle() (SECURITY DEFINER); no direct
--- player access. RLS enabled with no policies = deny by default.
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.chondro_conservation_market_intakes (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  market_listing_id uuid NOT NULL UNIQUE
-    REFERENCES public.chondro_player_market(id) ON DELETE CASCADE,
-  snake_id text NOT NULL,
-  subspecies text NOT NULL,
-  phenotype_score numeric NOT NULL DEFAULT 0,
-  generation integer NOT NULL DEFAULT 1,
-  locality_ancestry jsonb NOT NULL DEFAULT '{}'::jsonb,
-  acquired_at timestamptz NOT NULL DEFAULT now()
-);
-
-ALTER TABLE public.chondro_conservation_market_intakes ENABLE ROW LEVEL SECURITY;
-
-REVOKE ALL ON TABLE public.chondro_conservation_market_intakes FROM public, anon, authenticated;
 
 -- ----------------------------------------------------------------------------
 -- §13 Verification
