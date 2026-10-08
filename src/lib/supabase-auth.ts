@@ -1,5 +1,5 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
 
 // Arcade Supabase project (arboreal-arcade, zuhovlszrohwtdxqrhnx). This code must
 // NEVER fall back to Planet's project — a missing env var should fail loudly
@@ -24,104 +24,94 @@ function assertSupabaseConfigured() {
     );
   }
 }
-export const ACCESS_COOKIE = "ap_access";
-export const REFRESH_COOKIE = "ap_refresh";
 
-type AuthSession = { access_token?: string; refresh_token?: string; expires_in?: number; user?: { id: string; email?: string | null; user_metadata?: Record<string, unknown> } };
+// ---------------------------------------------------------------------------
+// Arcade identity: Planet is the identity/role source. Planet's server mints
+// a short-lived HS256 Arcade JWT (ap_arcade_jwt cookie) with sub = the
+// player's Planet user UUID, role = "authenticated", and user_role = the
+// Planet role. The Arcade verifies the signature with the Arcade project's
+// JWT secret and forwards the SAME token as the PostgREST Bearer, so
+// auth.uid() and RLS resolve with no copied auth users and no shadow accounts.
+// Required server-only env: ARCADE_JWT_SECRET.
+// ---------------------------------------------------------------------------
+export const ARCADE_JWT_COOKIE = "ap_arcade_jwt";
+const ARCADE_JWT_SECRET = process.env.ARCADE_JWT_SECRET ?? "";
 
-export async function supabaseAuthRequest(path: string, init: RequestInit = {}, bearer?: string) {
-  assertSupabaseConfigured();
-  return fetch(`${SUPABASE_AUTH_URL}/auth/v1/${path}`, {
-    ...init,
-    headers: {
-      apikey: SUPABASE_AUTH_KEY,
-      "Content-Type": "application/json",
-      ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
-      ...(init.headers ?? {}),
-    },
-    cache: "no-store",
-  });
-}
+export type ArcadeIdentity = {
+  token: string;
+  user: { id: string; user_role: string | null };
+};
 
-export async function verifyAccessToken(token: string) {
-  const response = await supabaseAuthRequest("user", { method: "GET" }, token);
-  if (!response.ok) return null;
-  return response.json() as Promise<{ id: string; email?: string | null; user_metadata?: Record<string, unknown> }>;
-}
+function verifyArcadeJwt(token: string): { sub: string; user_role: string | null } | null {
+  if (!ARCADE_JWT_SECRET) return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  const [headerB64, payloadB64, signature] = parts;
 
-export async function refreshAuthSession(refreshToken: string): Promise<AuthSession | null> {
-  const response = await supabaseAuthRequest("token?grant_type=refresh_token", {
-    method: "POST",
-    body: JSON.stringify({ refresh_token: refreshToken }),
-  });
-  if (!response.ok) return null;
-  return response.json() as Promise<AuthSession>;
-}
-
-export function writeAuthCookies(response: NextResponse, session: AuthSession) {
-  if (!session.access_token || !session.refresh_token) return;
-  const secure = process.env.NODE_ENV === "production";
-  response.cookies.set(ACCESS_COOKIE, session.access_token, { httpOnly: true, secure, sameSite: "lax", path: "/", maxAge: session.expires_in ?? 3600 });
-  response.cookies.set(REFRESH_COOKIE, session.refresh_token, { httpOnly: true, secure, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30 });
-}
-
-export function clearAuthCookies(response: NextResponse) {
-  response.cookies.set(ACCESS_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
-  response.cookies.set(REFRESH_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
-}
-
-export async function getServerIdentity() {
-  const store = await cookies();
-  const token = store.get(ACCESS_COOKIE)?.value;
-  const refreshToken = store.get(REFRESH_COOKIE)?.value;
-
-  if (token) {
-    const user = await verifyAccessToken(token);
-    if (user) return { token, user };
+  let header: { alg?: string };
+  try {
+    header = JSON.parse(Buffer.from(headerB64, "base64url").toString("utf8")) as { alg?: string };
+  } catch {
+    return null;
   }
+  if (header.alg !== "HS256") return null;
 
-  if (refreshToken) {
-    const session = await refreshAuthSession(refreshToken);
-    if (session?.access_token) {
-      const user = session.user ?? await verifyAccessToken(session.access_token);
-      if (user) return { token: session.access_token, user };
-    }
+  const expected = createHmac("sha256", ARCADE_JWT_SECRET)
+    .update(`${headerB64}.${payloadB64}`)
+    .digest("base64url");
+  const a = Buffer.from(signature, "utf8");
+  const b = Buffer.from(expected, "utf8");
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+
+  let claims: { sub?: unknown; user_role?: unknown; exp?: unknown };
+  try {
+    claims = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8")) as {
+      sub?: unknown;
+      user_role?: unknown;
+      exp?: unknown;
+    };
+  } catch {
+    return null;
   }
-
-  return null;
+  if (typeof claims.sub !== "string" || !claims.sub) return null;
+  if (typeof claims.exp === "number" && claims.exp * 1000 < Date.now() - 30_000) return null;
+  return {
+    sub: claims.sub,
+    user_role: typeof claims.user_role === "string" ? claims.user_role : null,
+  };
 }
 
-export async function fetchOwnProfile(token: string, userId: string) {
-  assertSupabaseConfigured();
-  const fields = "id,username,display_name,bio,location,avatar_url,banner_url,accent_color,profile_visibility,seller_enabled,role,website_url,instagram_url,facebook_url,seller_verification_status,seller_verification_requested_at,seller_verified_at";
-  const response = await fetch(`${SUPABASE_AUTH_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}&select=${fields}`, {
-    headers: { apikey: SUPABASE_AUTH_KEY, Authorization: `Bearer ${token}`, Accept: "application/json" },
-    cache: "no-store",
-  });
-  if (!response.ok) return null;
-  const rows = await response.json() as Array<Record<string, unknown>>;
-  return rows[0] ?? null;
-}
-
-
-export async function getSnakeSorterAccess(token: string, userId: string) {
-  assertSupabaseConfigured();
-  const profile = await fetchOwnProfile(token, userId) as { role?: string } | null;
-  if (profile?.role === "owner") return { allowed: true, isOwner: true, accessLevel: "owner" as const };
-
-  const response = await fetch(
-    `${SUPABASE_AUTH_URL}/rest/v1/snake_sorter_members?user_id=eq.${encodeURIComponent(userId)}&is_enabled=eq.true&select=access_level&limit=1`,
-    {
+// First-use profile creation: the Arcade keeps a minimal profiles row per
+// Planet player (id + role + directory columns). The upsert runs with the
+// player's own JWT and refreshes role from the Planet-issued claim on every
+// call, so Planet stays the role source of truth. Best-effort: identity must
+// never fail because a profile sync hiccuped.
+async function ensureArcadeProfile(token: string, userId: string, userRole: string | null) {
+  try {
+    assertSupabaseConfigured();
+    const body: Record<string, unknown> = { id: userId };
+    if (userRole) body.role = userRole;
+    await fetch(`${SUPABASE_AUTH_URL}/rest/v1/profiles?on_conflict=id`, {
+      method: "POST",
       headers: {
         apikey: SUPABASE_AUTH_KEY,
         Authorization: `Bearer ${token}`,
-        Accept: "application/json",
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates",
       },
+      body: JSON.stringify(body),
       cache: "no-store",
-    },
-  );
-  if (!response.ok) return { allowed: false, isOwner: false, accessLevel: null };
-  const rows = await response.json() as Array<{ access_level?: string }>;
-  if (!rows[0]) return { allowed: false, isOwner: false, accessLevel: null };
-  return { allowed: true, isOwner: false, accessLevel: rows[0].access_level ?? "scanner" };
+    });
+  } catch {
+    /* best-effort */
+  }
+}
+
+export async function getServerIdentity(): Promise<ArcadeIdentity | null> {
+  const token = (await cookies()).get(ARCADE_JWT_COOKIE)?.value;
+  if (!token) return null;
+  const verified = verifyArcadeJwt(token);
+  if (!verified) return null;
+  await ensureArcadeProfile(token, verified.sub, verified.user_role);
+  return { token, user: { id: verified.sub, user_role: verified.user_role } };
 }
