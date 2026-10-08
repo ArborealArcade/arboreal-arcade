@@ -26,7 +26,7 @@ export const LIZARD_MUSIC: RadioTrack[] = [
 // already public in the codebase). No NEXT_PUBLIC_* Vercel config needed.
 export const RADIO_BASE_URL =
   process.env.NEXT_PUBLIC_LIZARD_MUSIC_URL ??
-  "https://ykaqnxajszwgeqkmaora.supabase.co/storage/v1/object/public/lizard-music";
+  "https://zuhovlszrohwtdxqrhnx.supabase.co/storage/v1/object/public/lizard-music";
 
 export const radioTrackUrl = (track: RadioTrack) =>
   `${RADIO_BASE_URL}/${encodeURIComponent(track.file)}`;

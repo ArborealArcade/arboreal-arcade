@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 
 /** Supabase Storage bucket holding the AI court-card art and card back. */
 export const CARD_ART_BASE_URL =
-  "https://ykaqnxajszwgeqkmaora.supabase.co/storage/v1/object/public/arcade-card-art";
+  "https://zuhovlszrohwtdxqrhnx.supabase.co/storage/v1/object/public/arcade-card-art";
 
 export type CardSuit = "S" | "H" | "D" | "C";
 export type CardSize = "sm" | "md" | "lg" | "fluid";
