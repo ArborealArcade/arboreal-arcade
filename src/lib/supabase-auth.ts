@@ -42,7 +42,7 @@ export type ArcadeIdentity = {
   user: { id: string; user_role: string | null };
 };
 
-function verifyArcadeJwt(token: string): { sub: string; user_role: string | null } | null {
+export function verifyArcadeJwt(token: string): { sub: string; user_role: string | null } | null {
   if (!ARCADE_JWT_SECRET) return null;
   const parts = token.split(".");
   if (parts.length !== 3) return null;
