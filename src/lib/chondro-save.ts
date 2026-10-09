@@ -40,6 +40,16 @@ export async function loadChondroSaveState(): Promise<ChondroSaveLoadResult> {
       const data = await response.json();
       const state = data?.save?.state;
       if (state && typeof state === "object" && !Array.isArray(state)) {
+        // Sync server save to localStorage so components reading from local
+        // (level display, Canopy Hunter card, etc.) get the correct values
+        // in the standalone Arcade where the server is the source of truth.
+        try {
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem(CHONDRO_LOCAL_SAVE_KEY, JSON.stringify(state));
+          }
+        } catch {
+          // localStorage write failure is non-fatal
+        }
         return { authenticated: true, state: state as Record<string, unknown> };
       }
       // Signed in but no cloud save yet: the player's progress may still be local.
