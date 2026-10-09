@@ -12,12 +12,34 @@ function readCareerReputation() {
   if (typeof window === "undefined") return 0;
   try {
     const raw = window.localStorage.getItem(LOCAL_SAVE_KEY);
-    if (!raw) return 0;
-    const parsed = JSON.parse(raw) as { careerReputation?: unknown };
-    const value = Number(parsed.careerReputation ?? 0);
-    return Number.isFinite(value) ? Math.max(0, value) : 0;
+    if (raw) {
+      const parsed = JSON.parse(raw) as { careerReputation?: unknown };
+      const value = Number(parsed.careerReputation ?? 0);
+      if (Number.isFinite(value) && value > 0) return Math.max(0, value);
+    }
+    // In the standalone Arcade, the server is the source of truth. If the
+    // user is authenticated but localStorage is empty, the reputation will
+    // be populated by the cloud sync. Return 0 for now; the component
+    // re-syncs on focus/storage events.
+    return 0;
   } catch {
     return 0;
+  }
+}
+
+async function fetchServerReputation(): Promise<number | null> {
+  try {
+    const response = await fetch("/api/hatchery/arboreal-keeper/save", {
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    // The save API returns { save: { state: { careerReputation } } } or similar
+    const rep = data?.save?.state?.careerReputation ?? data?.state?.careerReputation;
+    const value = Number(rep ?? 0);
+    return Number.isFinite(value) ? Math.max(0, value) : null;
+  } catch {
+    return null;
   }
 }
 
@@ -26,6 +48,23 @@ export function ArborealKeeperProgressionStrip() {
 
   useEffect(() => {
     const sync = () => setReputation(readCareerReputation());
+    const syncFromServer = async () => {
+      // If localStorage is empty but user is authenticated, try server
+      const local = readCareerReputation();
+      if (local > 0) {
+        setReputation(local);
+        return;
+      }
+      const hasArcadeJwt = document.cookie.split(";").some((c) => c.trim().startsWith("ap_arcade_jwt="));
+      if (hasArcadeJwt) {
+        const serverRep = await fetchServerReputation();
+        if (serverRep !== null && serverRep > 0) {
+          setReputation(serverRep);
+          return;
+        }
+      }
+      setReputation(local);
+    };
     const syncEconomy = (event: Event) => {
       const detail = (event as CustomEvent<{ reputation?: number }>).detail;
       if (typeof detail?.reputation === "number") {
@@ -34,13 +73,13 @@ export function ArborealKeeperProgressionStrip() {
       }
       sync();
     };
-    sync();
+    syncFromServer();
     window.addEventListener("storage", sync);
-    window.addEventListener("focus", sync);
+    window.addEventListener("focus", syncFromServer);
     window.addEventListener("arboreal-keeper-economy-updated", syncEconomy);
     return () => {
       window.removeEventListener("storage", sync);
-      window.removeEventListener("focus", sync);
+      window.removeEventListener("focus", syncFromServer);
       window.removeEventListener("arboreal-keeper-economy-updated", syncEconomy);
     };
   }, []);
