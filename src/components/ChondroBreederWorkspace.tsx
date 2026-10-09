@@ -163,9 +163,9 @@ export function ChondroBreederWorkspace() {
       <header className="sticky top-0 z-[70] border-b border-white/[.055] bg-[#030806]/96 backdrop-blur-xl">
         <div className="mx-auto flex min-h-[60px] max-w-[1500px] items-center gap-3 px-3 sm:min-h-[66px] sm:px-5">
           <Link
-            href="/"
-            aria-label="Exit Arboreal Keeper and return to Arboreal Planet"
-            title="Return to Arboreal Planet" onClick={() => playHankScaleLine(8)}
+            href="/arcade"
+            aria-label="Exit Arboreal Keeper and return to the Arcade"
+            title="Return to the Arcade" onClick={() => playHankScaleLine(8)}
             className="group grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/[.07] bg-white/[.025] transition hover:border-emerald-300/20 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/40"
           >
             <ArborealPlanetMark className="h-9 w-9 transition group-hover:scale-[1.03]" />

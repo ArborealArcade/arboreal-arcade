@@ -83,7 +83,7 @@ export function ArborealKeeperAdHero({ onEnter, onReplayIntro }: { onEnter: () =
               Play intro
             </button>
             <Link
-              href="/"
+              href="https://arboreal-planet.vercel.app/"
               className="inline-flex items-center justify-center rounded-2xl border border-white/12 bg-white/[.03] px-6 py-4 text-sm font-semibold text-white/60 transition hover:border-white/25 hover:text-white/90"
             >
               Back to Arboreal Planet
