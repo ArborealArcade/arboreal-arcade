@@ -299,6 +299,8 @@ function BreederHome({ onOpen }: { onOpen: (view: WorkspaceView) => void }) {
   const [expedition, setExpedition] = useState(readExpeditionCardState);
   useEffect(() => {
     const refresh = () => setExpedition(readExpeditionCardState());
+    // Re-read on mount (SSR initial state may be stale) and on save changes
+    refresh();
     window.addEventListener("arboreal-chondro-breeder-save-change", refresh);
     return () => window.removeEventListener("arboreal-chondro-breeder-save-change", refresh);
   }, []);
