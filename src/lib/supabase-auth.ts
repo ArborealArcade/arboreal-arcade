@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createVerify } from "node:crypto";
 import { cookies } from "next/headers";
 
 // Arcade Supabase project (arboreal-arcade, zuhovlszrohwtdxqrhnx). This code must
@@ -27,7 +27,7 @@ function assertSupabaseConfigured() {
 
 // ---------------------------------------------------------------------------
 // Arcade identity: Planet is the identity/role source. Planet's server mints
-// a short-lived HS256 Arcade JWT (ap_arcade_jwt cookie) with sub = the
+// a short-lived ES256 Arcade JWT (ap_arcade_jwt cookie) with sub = the
 // player's Planet user UUID, role = "authenticated", and user_role = the
 // Planet role. The Arcade verifies the signature with the Arcade project's
 // JWT secret and forwards the SAME token as the PostgREST Bearer, so
@@ -54,14 +54,28 @@ export function verifyArcadeJwt(token: string): { sub: string; user_role: string
   } catch {
     return null;
   }
-  if (header.alg !== "HS256") return null;
+  // ES256 (ECC P-256) — matches the Supabase project's JWT signing key so
+  // PostgREST accepts the same token for auth.uid()/RLS.
+  if (header.alg !== "ES256") return null;
 
-  const expected = createHmac("sha256", ARCADE_JWT_SECRET)
-    .update(`${headerB64}.${payloadB64}`)
-    .digest("base64url");
-  const a = Buffer.from(signature, "utf8");
-  const b = Buffer.from(expected, "utf8");
-  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  let sigJose: Buffer;
+  try {
+    sigJose = Buffer.from(signature, "base64url");
+  } catch {
+    return null;
+  }
+  if (sigJose.length !== 64) return null;
+  const sigDer = joseToDer(sigJose);
+
+  let ok = false;
+  try {
+    const verifier = createVerify("SHA256");
+    verifier.update(`${headerB64}.${payloadB64}`);
+    ok = verifier.verify(ARCADE_JWT_SECRET, sigDer);
+  } catch {
+    return null;
+  }
+  if (!ok) return null;
 
   let claims: { sub?: unknown; user_role?: unknown; exp?: unknown };
   try {
@@ -79,6 +93,29 @@ export function verifyArcadeJwt(token: string): { sub: string; user_role: string
     sub: claims.sub,
     user_role: typeof claims.user_role === "string" ? claims.user_role : null,
   };
+}
+
+/** JOSE 64-byte R||S -> DER-encoded ECDSA signature. */
+function joseToDer(jose: Buffer): Buffer {
+  let r = jose.subarray(0, 32);
+  let s = jose.subarray(32, 64);
+  while (r.length > 1 && r[0] === 0x00) r = r.subarray(1);
+  while (s.length > 1 && s[0] === 0x00) s = s.subarray(1);
+  if (r[0] & 0x80) r = Buffer.concat([Buffer.from([0x00]), r]);
+  if (s[0] & 0x80) s = Buffer.concat([Buffer.from([0x00]), s]);
+  const innerLen = 2 + r.length + 2 + s.length;
+  const der = Buffer.alloc(2 + innerLen);
+  let o = 0;
+  der[o++] = 0x30;
+  der[o++] = innerLen;
+  der[o++] = 0x02;
+  der[o++] = r.length;
+  r.copy(der, o);
+  o += r.length;
+  der[o++] = 0x02;
+  der[o++] = s.length;
+  s.copy(der, o);
+  return der;
 }
 
 // First-use profile creation: the Arcade keeps a minimal profiles row per
