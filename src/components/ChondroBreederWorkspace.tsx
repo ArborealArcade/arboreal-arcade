@@ -46,7 +46,17 @@ function readExpeditionCardState(): { started: boolean; freeReady: boolean; free
   if (typeof window === "undefined") return empty;
   try {
     const raw = window.localStorage.getItem("arboreal_chondro_breeder_v2");
-    if (!raw) return empty;
+    if (!raw) {
+      // In the standalone Arcade, the server is the source of truth. If the
+      // user is authenticated (has the Arcade JWT cookie), assume they have a
+      // started save so the Canopy Hunter card appears. The actual expedition
+      // gating (freeReady, blocked) is enforced server-side on entry.
+      const hasArcadeJwt = document.cookie.split(";").some((c) => c.trim().startsWith("ap_arcade_jwt="));
+      if (hasArcadeJwt) {
+        return { started: true, freeReady: true, freeInDays: 0, blocked: false };
+      }
+      return empty;
+    }
     const parsed = JSON.parse(raw) as {
       started?: unknown;
       expeditionNextAt?: unknown;
