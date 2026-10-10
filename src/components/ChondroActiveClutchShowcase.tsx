@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { loadChondroSaveState } from "@/lib/chondro-save";
+import { loadChondroSaveState, readLocalSaveState } from "@/lib/chondro-save";
 import { ChondroSnakeIcon } from "@/components/ChondroSnakeIcon";
 import { animalHousingCapacity } from "@/lib/chondro-facility-limits";
 
@@ -68,14 +68,22 @@ export function ChondroActiveClutchShowcase() {
         if (active && state) setSave(state);
       } catch {}
     }
+    // Fast local refresh: the save-change event fires AFTER the game writes
+    // the fresh save to localStorage, so read it directly instead of hitting
+    // the network. This keeps holdback toggles instant.
+    function refreshLocal() {
+      try {
+        const state = readLocalSaveState();
+        if (active && state) setSave(state);
+      } catch {}
+    }
     void load();
-    const refresh = () => void load();
-    const timer = window.setInterval(load, 5000);
-    window.addEventListener("arboreal-chondro-breeder-save-change", refresh);
+    const timer = window.setInterval(refreshLocal, 5000);
+    window.addEventListener("arboreal-chondro-breeder-save-change", refreshLocal);
     return () => {
       active = false;
       window.clearInterval(timer);
-      window.removeEventListener("arboreal-chondro-breeder-save-change", refresh);
+      window.removeEventListener("arboreal-chondro-breeder-save-change", refreshLocal);
     };
   }, []);
 

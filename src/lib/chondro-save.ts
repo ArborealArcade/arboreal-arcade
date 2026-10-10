@@ -19,7 +19,7 @@ export type ChondroSaveLoadResult = {
   state: Record<string, unknown> | null;
 };
 
-function readLocalSaveState(): Record<string, unknown> | null {
+export function readLocalSaveState(): Record<string, unknown> | null {
   try {
     const raw = window.localStorage.getItem(CHONDRO_LOCAL_SAVE_KEY);
     if (!raw) return null;

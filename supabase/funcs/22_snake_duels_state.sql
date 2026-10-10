@@ -1,0 +1,83 @@
+CREATE OR REPLACE FUNCTION public.snake_duels_state(p_duel_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  d record;
+  v_uid uuid := auth.uid();
+  v_is_challenger boolean;
+  v_is_opponent boolean;
+  v_ch_name text;
+  v_op_name text;
+BEGIN
+  SELECT * INTO d FROM public.snake_duels WHERE id = p_duel_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'duel not found'; END IF;
+  PERFORM public.snake_duels_expire(p_duel_id);
+  SELECT * INTO d FROM public.snake_duels WHERE id = p_duel_id;
+  v_is_challenger := (v_uid = d.challenger);
+  v_is_opponent := (v_uid = d.opponent);
+  -- Snake display names from the registry snapshots (asset keys are not names).
+  SELECT trait_snapshot->>'name' INTO v_ch_name
+  FROM public.hatchling_stakes_animals WHERE asset_key = d.challenger_snake;
+  SELECT trait_snapshot->>'name' INTO v_op_name
+  FROM public.hatchling_stakes_animals WHERE asset_key = d.opponent_snake;
+  RETURN jsonb_build_object(
+    'id', d.id,
+    'state', d.state,
+    'tier', d.tier,
+    'challenger', CASE WHEN v_is_challenger OR v_is_opponent THEN d.challenger END,
+    'opponent', CASE WHEN v_is_challenger OR v_is_opponent THEN d.opponent END,
+    'challenger_snake', CASE
+       WHEN v_is_challenger OR v_is_opponent THEN d.challenger_snake
+       WHEN d.state = 'open' THEN d.challenger_snake END,
+    'opponent_snake', CASE WHEN v_is_challenger OR v_is_opponent THEN d.opponent_snake END,
+    'challenger_snake_name', CASE
+       WHEN v_is_challenger OR v_is_opponent THEN v_ch_name
+       WHEN d.state = 'open' THEN v_ch_name END,
+    'opponent_snake_name', CASE WHEN v_is_challenger OR v_is_opponent THEN v_op_name END,
+    'challenger_decided', d.challenger_decision IS NOT NULL,
+    'opponent_decided', d.opponent_decision IS NOT NULL,
+    'created_at', d.created_at,
+    'expires_at', d.expires_at,
+    'winner', d.winner,
+    'win_reason', d.win_reason,
+    'winning_hand', d.winning_hand,
+    'is_challenger', v_is_challenger,
+    'is_opponent', v_is_opponent,
+    'can_accept', d.state = 'open' AND NOT v_is_challenger AND v_uid IS NOT NULL,
+    'my_hole', CASE
+       WHEN d.state IN ('in_progress', 'settling')
+            AND ((v_is_challenger AND d.challenger_hole IS NOT NULL)
+              OR (v_is_opponent AND d.opponent_hole IS NOT NULL)) THEN
+         CASE WHEN v_is_challenger THEN d.challenger_hole ELSE d.opponent_hole END
+       WHEN d.state = 'complete' AND (v_is_challenger OR v_is_opponent) THEN
+         CASE WHEN v_is_challenger THEN d.challenger_hole ELSE d.opponent_hole END
+       END,
+    'my_decision', CASE WHEN v_is_challenger THEN d.challenger_decision
+                        WHEN v_is_opponent THEN d.opponent_decision END,
+    'my_snake', CASE WHEN v_is_challenger THEN d.challenger_snake
+                     WHEN v_is_opponent THEN d.opponent_snake END,
+    'board', CASE WHEN d.state = 'complete' AND d.deck IS NOT NULL
+                   AND (v_is_challenger OR v_is_opponent)
+                  THEN (SELECT jsonb_agg(x ORDER BY ord)
+                        FROM jsonb_array_elements_text(d.deck) WITH ORDINALITY AS t(x, ord)
+                        WHERE ord BETWEEN 5 AND 9)
+             END,
+    'challenger_hole', CASE WHEN d.state = 'complete' AND (v_is_challenger OR v_is_opponent)
+                            THEN d.challenger_hole END,
+    'opponent_hole', CASE WHEN d.state = 'complete' AND (v_is_challenger OR v_is_opponent)
+                          THEN d.opponent_hole END
+  );
+END;
+$$;
+REVOKE ALL ON FUNCTION public.snake_duels_state(uuid) FROM public;
+GRANT EXECUTE ON FUNCTION public.snake_duels_state(uuid) TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- Arcade wallets
+-- ----------------------------------------------------------------------------
+
+-- First-sync seed: adopt the larger of the server balance and the device
+-- balance, so signing in on a new device never wipes earned tokens.

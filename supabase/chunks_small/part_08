@@ -1,0 +1,100 @@
+  v_exempt boolean;
+  v_tokens jsonb;
+BEGIN
+  INSERT INTO public.hatchling_stakes_tokens (user_id, week_key, slot)
+  VALUES (auth.uid(), v_week, 1), (auth.uid(), v_week, 2)
+  ON CONFLICT (user_id, week_key, slot) DO NOTHING;
+  SELECT EXISTS (
+    SELECT 1 FROM public.hatchling_stakes_token_exemptions WHERE user_id = auth.uid()
+  ) INTO v_exempt;
+  SELECT jsonb_agg(jsonb_build_object('slot', slot, 'status', status, 'wager_id', wager_id)
+                    ORDER BY slot)
+    INTO v_tokens
+    FROM public.hatchling_stakes_tokens
+    WHERE user_id = auth.uid() AND week_key = v_week;
+  RETURN jsonb_build_object(
+    'week_key', v_week,
+    'resets_at', v_next,
+    'unlimited', v_exempt,
+    'tokens', v_tokens
+  );
+END;
+$$;
+REVOKE ALL ON FUNCTION public.hatchling_stakes_my_tokens() FROM public;
+GRANT EXECUTE ON FUNCTION public.hatchling_stakes_my_tokens() TO authenticated;
+
+-- Animals the caller may stake: server-registered, producer = owner = caller,
+-- active, and not currently locked.
+CREATE OR REPLACE FUNCTION public.hatchling_stakes_eligible_animals()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN COALESCE((
+    SELECT jsonb_agg(jsonb_build_object(
+      'asset_key', a.asset_key,
+      'tier', a.tier,
+      'trait_snapshot', a.trait_snapshot,
+      'created_at', a.created_at
+    ) ORDER BY a.created_at DESC)
+    FROM public.hatchling_stakes_animals a
+    WHERE a.producer = auth.uid()
+      AND a.owner = auth.uid()
+      AND a.source = 'breeder-registered'
+      AND a.state = 'active'
+      AND NOT EXISTS (SELECT 1 FROM public.hatchling_stakes_wager_locks l
+                      WHERE l.asset_key = a.asset_key AND l.state = 'active')
+  ), '[]'::jsonb);
+END;
+$$;
+REVOKE ALL ON FUNCTION public.hatchling_stakes_eligible_animals() FROM public;
+GRANT EXECUTE ON FUNCTION public.hatchling_stakes_eligible_animals() TO authenticated;
+
+-- Register a bred clutch. Idempotent per (breeder, clutch_fingerprint): a rolled-back
+-- or re-submitted save returns the SAME canonical assets, never duplicates.
+-- p_offspring: jsonb array of {name, tier, traits}.
+CREATE OR REPLACE FUNCTION public.hatchling_stakes_register_offspring(
+  p_clutch_fingerprint text,
+  p_parents jsonb,
+  p_offspring jsonb
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+DECLARE
+  v_event_id uuid;
+  v_assets jsonb := '[]'::jsonb;
+  o jsonb;
+  v_key text;
+BEGIN
+  IF p_clutch_fingerprint IS NULL OR length(p_clutch_fingerprint) > 200 THEN
+    RAISE EXCEPTION 'bad fingerprint';
+  END IF;
+  IF p_offspring IS NULL OR jsonb_array_length(p_offspring) = 0
+     OR jsonb_array_length(p_offspring) > 40 THEN
+    RAISE EXCEPTION 'bad offspring list';
+  END IF;
+
+  SELECT id INTO v_event_id FROM public.hatchling_stakes_breeding_events
+  WHERE breeder = auth.uid() AND clutch_fingerprint = p_clutch_fingerprint;
+
+  IF v_event_id IS NULL THEN
+    INSERT INTO public.hatchling_stakes_breeding_events (breeder, clutch_fingerprint, parents)
+    VALUES (auth.uid(), p_clutch_fingerprint, COALESCE(p_parents, '{}'::jsonb))
+    RETURNING id INTO v_event_id;
+
+    FOR o IN SELECT * FROM jsonb_array_elements(p_offspring) LOOP
+      IF COALESCE(o->>'tier', '') NOT IN ('sprout','vine','canopy','emergent','crown') THEN
+        RAISE EXCEPTION 'bad tier';
+      END IF;
+      v_key := 'hs-' || encode(gen_random_bytes(16), 'hex');
+      INSERT INTO public.hatchling_stakes_animals
+        (asset_key, producer, owner, source, tier, trait_snapshot, breeding_event_id)
+      VALUES (v_key, auth.uid(), auth.uid(), 'breeder-registered', o->>'tier',
+              jsonb_build_object('name', left(COALESCE(o->>'name','Hatchling'), 80),
+                                 'traits', COALESCE(o->'traits', '{}'::jsonb)),
+              v_event_id);

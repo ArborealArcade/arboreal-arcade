@@ -1,0 +1,100 @@
+    -- Settle retry path: the route's settle call may have failed after both
+    -- decisions landed. Report ready so the route can finish the job.
+    RETURN jsonb_build_object('settle_ready', true, 'state', d.state);
+  END IF;
+  IF d.state <> 'in_progress' THEN RAISE EXCEPTION 'duel not in progress'; END IF;
+  IF v_uid <> d.challenger AND v_uid <> d.opponent THEN RAISE EXCEPTION 'not your duel'; END IF;
+  v_is_challenger := (v_uid = d.challenger);
+
+  IF v_is_challenger THEN
+    IF d.challenger_decision IS NOT NULL THEN
+      RETURN jsonb_build_object('settle_ready', d.opponent_decision IS NOT NULL, 'state', d.state);
+    END IF;
+    UPDATE public.snake_duels SET challenger_decision = p_decision WHERE id = p_duel_id;
+    v_other_decision := d.opponent_decision;
+  ELSE
+    IF d.opponent_decision IS NOT NULL THEN
+      RETURN jsonb_build_object('settle_ready', d.challenger_decision IS NOT NULL, 'state', d.state);
+    END IF;
+    UPDATE public.snake_duels SET opponent_decision = p_decision WHERE id = p_duel_id;
+    v_other_decision := d.opponent_decision;
+  END IF;
+
+  -- A fold ends it immediately: the duel is ready to settle with one winner.
+  IF p_decision = 'fold' OR v_other_decision = 'fold' THEN
+    UPDATE public.snake_duels SET state = 'settling' WHERE id = p_duel_id;
+    RETURN jsonb_build_object('settle_ready', true, 'state', 'settling');
+  END IF;
+
+  IF v_other_decision IS NOT NULL THEN
+    UPDATE public.snake_duels SET state = 'settling' WHERE id = p_duel_id;
+    RETURN jsonb_build_object('settle_ready', true, 'state', 'settling');
+  END IF;
+  RETURN jsonb_build_object('settle_ready', false, 'state', 'in_progress');
+END;
+$$;
+REVOKE ALL ON FUNCTION public.snake_duels_decide(uuid, text) FROM public;
+GRANT EXECUTE ON FUNCTION public.snake_duels_decide(uuid, text) TO authenticated;
+
+-- Settle a duel whose decisions are final. Fully server-side: the outcome is
+-- computed here from the stored deck and decisions — callers pass nothing
+-- but the duel id. Idempotent: replays return the recorded result.
+CREATE OR REPLACE FUNCTION public.snake_duels_settle(p_duel_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+DECLARE
+  d record;
+  v_uid uuid := auth.uid();
+  v_ch_hole text[];
+  v_op_hole text[];
+  v_board text[];
+  v_ch7 text[];
+  v_op7 text[];
+  v_chev public.snake_duels_eval;
+  v_opev public.snake_duels_eval;
+  v_cmp int;
+  v_winner uuid := NULL;
+  v_win_reason text;
+  v_hand_name text := NULL;
+  v_ch_asset text;
+  v_op_asset text;
+  v_seq int;
+BEGIN
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'not signed in'; END IF;
+  SELECT * INTO d FROM public.snake_duels WHERE id = p_duel_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'duel not found'; END IF;
+
+  -- Idempotent replay: a double-submit or retry returns the recorded result.
+  IF d.state = 'complete' THEN
+    RETURN jsonb_build_object(
+      'duel_id', p_duel_id, 'state', 'complete', 'replay', true,
+      'winner', d.winner, 'win_reason', d.win_reason, 'winning_hand', d.winning_hand);
+  END IF;
+  IF d.state <> 'settling' THEN RAISE EXCEPTION 'duel not ready to settle'; END IF;
+  IF v_uid <> d.challenger AND v_uid <> d.opponent THEN RAISE EXCEPTION 'not your duel'; END IF;
+
+  -- ---- compute the outcome from stored game state (no caller input) ----
+  IF d.challenger_decision = 'fold' AND d.opponent_decision = 'fold' THEN
+    -- Defensive only (unreachable via decide): both folded, so nobody pays.
+    -- Snakes go home, tokens refunded.
+    v_win_reason := 'tie';
+    v_hand_name := 'Both players folded — stakes returned';
+  ELSIF d.challenger_decision = 'fold' THEN
+    v_winner := d.opponent; v_win_reason := 'fold';
+  ELSIF d.opponent_decision = 'fold' THEN
+    v_winner := d.challenger; v_win_reason := 'fold';
+  ELSE
+    -- Showdown: run out the board from the stored deck, evaluate in-database.
+    SELECT array_agg(x ORDER BY ord) INTO v_board
+    FROM jsonb_array_elements_text(d.deck) WITH ORDINALITY AS t(x, ord)
+    WHERE ord BETWEEN 5 AND 9;
+    SELECT array_agg(x ORDER BY ord) INTO v_ch_hole
+    FROM jsonb_array_elements_text(d.challenger_hole) WITH ORDINALITY AS t(x, ord);
+    SELECT array_agg(x ORDER BY ord) INTO v_op_hole
+    FROM jsonb_array_elements_text(d.opponent_hole) WITH ORDINALITY AS t(x, ord);
+    v_ch7 := v_ch_hole || v_board;
+    v_op7 := v_op_hole || v_board;
+    v_chev := public.snake_duels_eval7(v_ch7);

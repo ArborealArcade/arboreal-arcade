@@ -1,0 +1,78 @@
+CREATE OR REPLACE FUNCTION public.snake_duels_create(p_asset_key text)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+DECLARE
+  v_uid uuid := auth.uid();
+  v_wager uuid;
+  v_duel_id uuid;
+  v_week text := to_char(date_trunc('week', now() AT TIME ZONE 'UTC'), 'YYYY-MM-DD');
+  v_token_slot int;
+  v_exempt boolean;
+  v_tier text;
+  v_snapshot jsonb;
+  v_cfg text;
+BEGIN
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'not signed in'; END IF;
+  SELECT value INTO v_cfg FROM public.hatchling_stakes_config WHERE key = 'duels_enabled';
+  IF v_cfg IS NOT NULL AND v_cfg <> 'true' THEN RAISE EXCEPTION 'keeper duels are paused'; END IF;
+
+  -- Same animal gate as the Den: you stake a snake you produced and own,
+  -- from the claim/registry sources, currently idle.
+  SELECT tier, trait_snapshot INTO v_tier, v_snapshot
+  FROM public.hatchling_stakes_animals
+  WHERE asset_key = p_asset_key AND producer = v_uid AND owner = v_uid
+    AND source IN ('breeder-registered', 'inventory-claim') AND state = 'active' FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'snake not available'; END IF;
+  IF v_tier NOT IN ('sprout', 'vine', 'canopy') THEN RAISE EXCEPTION 'bad tier'; END IF;
+  IF EXISTS (SELECT 1 FROM public.hatchling_stakes_wager_locks
+             WHERE asset_key = p_asset_key AND state = 'active') THEN
+    RAISE EXCEPTION 'snake is locked in another game';
+  END IF;
+
+  -- One weekly token, reserved (not consumed) until the duel settles.
+  -- Exempt accounts (founder/testing) skip the token ledger entirely.
+  SELECT EXISTS (
+    SELECT 1 FROM public.hatchling_stakes_token_exemptions WHERE user_id = v_uid
+  ) INTO v_exempt;
+  IF NOT v_exempt THEN
+    INSERT INTO public.hatchling_stakes_tokens (user_id, week_key, slot)
+    VALUES (v_uid, v_week, 1), (v_uid, v_week, 2)
+    ON CONFLICT (user_id, week_key, slot) DO NOTHING;
+    SELECT slot INTO v_token_slot FROM public.hatchling_stakes_tokens
+    WHERE user_id = v_uid AND week_key = v_week AND status = 'available'
+    ORDER BY slot LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN RAISE EXCEPTION 'no duel token available'; END IF;
+  END IF;
+
+  INSERT INTO public.hatchling_stakes_wagers (mode, game, state, creator)
+  VALUES ('keeper', 'duel', 'in_progress', v_uid) RETURNING id INTO v_wager;
+  INSERT INTO public.hatchling_stakes_wager_entries (wager_id, actor, asset_key, snapshot)
+  VALUES (v_wager, v_uid, p_asset_key,
+          jsonb_build_object('tier', v_tier, 'snapshot', v_snapshot, 'side', 'challenger'));
+  INSERT INTO public.hatchling_stakes_wager_locks (asset_key, wager_id)
+  VALUES (p_asset_key, v_wager);
+  UPDATE public.hatchling_stakes_animals SET state = 'staked' WHERE asset_key = p_asset_key;
+  INSERT INTO public.hatchling_stakes_wager_events (wager_id, seq, type, payload_hash, payload)
+  VALUES (v_wager, 1, 'duel_opened', encode(digest(v_wager::text, 'sha256'), 'hex'),
+          jsonb_build_object('challenger_asset', p_asset_key, 'tier', v_tier));
+
+  IF NOT v_exempt THEN
+    UPDATE public.hatchling_stakes_tokens
+    SET status = 'reserved', wager_id = v_wager, updated_at = now()
+    WHERE user_id = v_uid AND week_key = v_week AND slot = v_token_slot;
+  END IF;
+
+  INSERT INTO public.snake_duels (tier, challenger, challenger_snake, wager_id)
+  VALUES (v_tier, v_uid, p_asset_key, v_wager)
+  RETURNING id INTO v_duel_id;
+  RETURN v_duel_id;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.snake_duels_create(text) FROM public;
+GRANT EXECUTE ON FUNCTION public.snake_duels_create(text) TO authenticated;
+
+-- Accept an open challenge. The deck is shuffled server-side and dealt here;
+-- the caller supplies only their snake. Returns the public duel state.

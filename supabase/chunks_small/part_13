@@ -1,0 +1,100 @@
+  RETURN jsonb_build_object('wager_id', p_wager_id, 'state', 'complete',
+                            'winner', p_winner, 'player_score', p_player_score,
+                            'player_is_winner', p_winner = auth.uid());
+END;
+$$;
+REVOKE ALL ON FUNCTION public.hatchling_stakes_settle(uuid, uuid, int) FROM public;
+GRANT EXECUTE ON FUNCTION public.hatchling_stakes_settle(uuid, uuid, int) TO authenticated;
+
+-- Void: platform fault or tie — unlock both assets, refund the token, no winner.
+CREATE OR REPLACE FUNCTION public.hatchling_stakes_void(p_wager_id uuid, p_reason text)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_state text;
+  v_creator uuid;
+BEGIN
+  SELECT state, creator INTO v_state, v_creator
+  FROM public.hatchling_stakes_wagers WHERE id = p_wager_id FOR UPDATE;
+  IF NOT FOUND OR v_creator <> auth.uid() THEN
+    RAISE EXCEPTION 'wager not found';
+  END IF;
+  IF v_state IN ('complete', 'void') THEN
+    RETURN true;
+  END IF;
+
+  UPDATE public.hatchling_stakes_animals SET state = 'active'
+  WHERE asset_key IN (SELECT asset_key FROM public.hatchling_stakes_wager_locks WHERE wager_id = p_wager_id);
+  DELETE FROM public.hatchling_stakes_wager_locks WHERE wager_id = p_wager_id;
+  UPDATE public.hatchling_stakes_npc_inventory SET state = 'available'
+  WHERE asset_key IN (SELECT npc_asset_key FROM public.hatchling_stakes_wagers WHERE id = p_wager_id)
+    AND state = 'staked';
+
+  UPDATE public.hatchling_stakes_tokens
+  SET status = 'refunded', updated_at = now()
+  WHERE wager_id = p_wager_id AND status IN ('reserved', 'consumed');
+
+  UPDATE public.hatchling_stakes_game_sessions SET state = 'voided', updated_at = now()
+  WHERE wager_id = p_wager_id;
+
+  INSERT INTO public.hatchling_stakes_wager_events (wager_id, seq, type, payload_hash, payload)
+  VALUES (p_wager_id,
+          (SELECT COALESCE(max(seq), 0) + 1 FROM public.hatchling_stakes_wager_events WHERE wager_id = p_wager_id),
+          'voided', encode(digest(p_wager_id::text || coalesce(p_reason,''), 'sha256'), 'hex'),
+          jsonb_build_object('reason', left(coalesce(p_reason, ''), 200)));
+
+  UPDATE public.hatchling_stakes_wagers SET state = 'void', updated_at = now()
+  WHERE id = p_wager_id;
+  RETURN true;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.hatchling_stakes_void(uuid, text) FROM public;
+GRANT EXECUTE ON FUNCTION public.hatchling_stakes_void(uuid, text) TO authenticated;
+
+-- Wager history for the caller (receipts).
+CREATE OR REPLACE FUNCTION public.hatchling_stakes_history(p_limit int DEFAULT 20)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN COALESCE((
+    SELECT jsonb_agg(jsonb_build_object(
+      'wager_id', w.id, 'mode', w.mode, 'game', w.game, 'state', w.state,
+      'rule_version', w.rule_version, 'created_at', w.created_at,
+      'player_asset', (SELECT asset_key FROM public.hatchling_stakes_wager_entries e
+                       WHERE e.wager_id = w.id AND e.actor = auth.uid()),
+      'npc_asset', w.npc_asset_key,
+      'winner', s.winner, 'player_score', s.player_score, 'target', s.target_score,
+      'hands_played', s.hands_played,
+      'player_is_winner', s.winner = auth.uid()
+    ) ORDER BY w.created_at DESC)
+    FROM public.hatchling_stakes_wagers w
+    LEFT JOIN public.hatchling_stakes_game_sessions s ON s.wager_id = w.id
+    WHERE w.creator = auth.uid()
+    LIMIT LEAST(GREATEST(COALESCE(p_limit, 20), 1), 100)
+  ), '[]'::jsonb);
+END;
+$$;
+REVOKE ALL ON FUNCTION public.hatchling_stakes_history(int) FROM public;
+GRANT EXECUTE ON FUNCTION public.hatchling_stakes_history(int) TO authenticated;
+
+-- Public session projection for the wager creator: everything EXCEPT the shoe.
+-- The browser never learns undealt cards.
+CREATE OR REPLACE FUNCTION public.hatchling_stakes_session_public(p_wager_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_creator uuid;
+BEGIN
+  SELECT w.creator INTO v_creator FROM public.hatchling_stakes_wagers w WHERE w.id = p_wager_id;
+  IF NOT FOUND OR v_creator <> auth.uid() THEN
+    RAISE EXCEPTION 'wager not found';
+  END IF;

@@ -1,0 +1,100 @@
+  active boolean NOT NULL DEFAULT true,
+  starts_at timestamptz,
+  expires_at timestamptz,
+  max_claims integer,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.event_code_claims (
+  code text NOT NULL REFERENCES public.event_codes(code) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  claimed_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (code, user_id)
+);
+
+ALTER TABLE public.event_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.event_code_claims ENABLE ROW LEVEL SECURITY;
+
+-- Codes are managed by staff only; players never read this table.
+DROP POLICY IF EXISTS event_codes_staff_all ON public.event_codes;
+CREATE POLICY event_codes_staff_all ON public.event_codes
+  FOR ALL TO authenticated
+  USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('admin', 'owner'))
+  WITH CHECK ((SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('admin', 'owner'));
+
+-- Players may see their own claims; staff may see all.
+DROP POLICY IF EXISTS event_code_claims_select ON public.event_code_claims;
+CREATE POLICY event_code_claims_select ON public.event_code_claims
+  FOR SELECT TO authenticated
+  USING (
+    user_id = auth.uid()
+    OR (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('admin', 'owner')
+  );
+
+REVOKE ALL ON TABLE public.event_codes FROM public, anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.event_codes TO authenticated;
+REVOKE ALL ON TABLE public.event_code_claims FROM public, anon, authenticated;
+GRANT SELECT ON TABLE public.event_code_claims TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- §8 EXEMPTION / GATE TABLES — server-side allowlists, no direct client access
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.canopy_hunter_exemptions (
+  user_id uuid PRIMARY KEY,
+  reason text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.canopy_hunter_port_devs (
+  user_id uuid PRIMARY KEY,
+  reason text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.keeper_unlimited_spaces (
+  user_id uuid PRIMARY KEY,
+  reason text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.canopy_hunter_exemptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.canopy_hunter_port_devs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.keeper_unlimited_spaces ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON TABLE public.canopy_hunter_exemptions FROM public, anon, authenticated;
+REVOKE ALL ON TABLE public.canopy_hunter_port_devs FROM public, anon, authenticated;
+REVOKE ALL ON TABLE public.keeper_unlimited_spaces FROM public, anon, authenticated;
+-- No grants: RPC-only tables.
+
+-- ============================================================================
+-- §9 RPC FUNCTIONS (all SECURITY DEFINER; called with the player's own JWT)
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- Poker / lifesap
+-- ----------------------------------------------------------------------------
+
+-- Return the caller's bankroll, creating it at 1000 on first use.
+CREATE OR REPLACE FUNCTION public.lifesap_get_bankroll()
+RETURNS bigint
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_balance bigint;
+BEGIN
+  INSERT INTO public.lifesap_bankrolls (user_id, balance)
+  VALUES (auth.uid(), 1000)
+  ON CONFLICT (user_id) DO NOTHING;
+  SELECT balance INTO v_balance FROM public.lifesap_bankrolls WHERE user_id = auth.uid();
+  RETURN v_balance;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.lifesap_get_bankroll() FROM public;
+GRANT EXECUTE ON FUNCTION public.lifesap_get_bankroll() TO authenticated;
+
+-- Table limits (per game) and max payout multipliers (× bet, incl. returned stake).
+-- These bounds are the anti-mint: the client reports a hand result, the server
+-- caps what it can be worth.
+CREATE OR REPLACE FUNCTION public.poker_game_limits(p_game text)

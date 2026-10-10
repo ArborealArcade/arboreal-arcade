@@ -1,0 +1,100 @@
+      v_assets := v_assets || jsonb_build_object('asset_key', v_key, 'tier', o->>'tier',
+                                                'name', left(COALESCE(o->>'name','Hatchling'), 80));
+    END LOOP;
+  ELSE
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'asset_key', asset_key, 'tier', tier,
+      'name', trait_snapshot->>'name') ORDER BY created_at), '[]'::jsonb)
+    INTO v_assets
+    FROM public.hatchling_stakes_animals WHERE breeding_event_id = v_event_id;
+  END IF;
+
+  RETURN jsonb_build_object('breeding_event_id', v_event_id, 'assets', v_assets);
+END;
+$$;
+REVOKE ALL ON FUNCTION public.hatchling_stakes_register_offspring(text, jsonb, jsonb) FROM public;
+GRANT EXECUTE ON FUNCTION public.hatchling_stakes_register_offspring(text, jsonb, jsonb) TO authenticated;
+
+-- Claim a snake from the keeper collection into the stakes registry.
+-- (Recorded from the live dashboard implementation in 20260927_stakes_claimed_source.)
+CREATE OR REPLACE FUNCTION public.hatchling_stakes_claim_inventory_animal(
+  p_name text, p_tier text, p_life_stage text, p_traits jsonb DEFAULT '{}'::jsonb
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_key text := 'inv-' || gen_random_uuid()::text;
+    v_name text := substr(trim(p_name), 1, 80);
+    v_snapshot jsonb;
+BEGIN
+    IF v_name = '' THEN
+        RAISE EXCEPTION 'name is required';
+    END IF;
+    IF p_tier NOT IN ('sprout', 'vine', 'canopy', 'emergent', 'crown') THEN
+        RAISE EXCEPTION 'unknown tier';
+    END IF;
+    IF p_life_stage NOT IN ('neonate', 'juvenile', 'subadult', 'adult') THEN
+        RAISE EXCEPTION 'unknown life stage';
+    END IF;
+    v_snapshot := jsonb_build_object(
+        'name', v_name,
+        'life_stage', p_life_stage,
+        'origin', 'inventory-claim'
+    ) || COALESCE(p_traits, '{}'::jsonb);
+    INSERT INTO public.hatchling_stakes_animals
+        (asset_key, producer, owner, source, tier, state, trait_snapshot, breeding_event_id)
+    VALUES (v_key, auth.uid(), auth.uid(), 'inventory-claim', p_tier, 'active', v_snapshot, NULL);
+    RETURN jsonb_build_object('asset_key', v_key, 'tier', p_tier, 'trait_snapshot', v_snapshot);
+END;
+$function$;
+REVOKE ALL ON FUNCTION public.hatchling_stakes_claim_inventory_animal(text, text, text, jsonb) FROM public;
+GRANT EXECUTE ON FUNCTION public.hatchling_stakes_claim_inventory_animal(text, text, text, jsonb) TO authenticated;
+
+-- Create an NPC wager for the caller's staked hatchling, mints a same-tier
+-- canonical NPC hatchling (seasonally capped), and opens the server-owned
+-- game session. Idempotent per player asset lock.
+-- Exempt callers skip the weekly token reservation entirely.
+-- FINAL version (20260927_stakes_claimed_source): accepts 'inventory-claim'
+-- snakes as well as 'breeder-registered'.
+CREATE OR REPLACE FUNCTION public.hatchling_stakes_create_npc_wager(p_asset_key text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+DECLARE
+  v_enabled text;
+  v_week text := to_char(date_trunc('week', now() AT TIME ZONE 'UTC'), 'YYYY-MM-DD');
+  v_token_slot int;
+  v_exempt boolean;
+  v_tier text;
+  v_snapshot jsonb;
+  v_wager_id uuid;
+  v_npc_key text;
+  v_season text := to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM');
+  v_cap int;
+  v_npc_count int;
+  v_npc_template text;
+  v_npc_name text;
+BEGIN
+  SELECT value INTO v_enabled FROM public.hatchling_stakes_config WHERE key = 'stakes_enabled';
+  IF v_enabled IS DISTINCT FROM 'true' THEN
+    RAISE EXCEPTION 'hatchling stakes are paused';
+  END IF;
+
+  SELECT EXISTS (
+    SELECT 1 FROM public.hatchling_stakes_token_exemptions WHERE user_id = auth.uid()
+  ) INTO v_exempt;
+
+  IF NOT v_exempt THEN
+    INSERT INTO public.hatchling_stakes_tokens (user_id, week_key, slot)
+    VALUES (auth.uid(), v_week, 1), (auth.uid(), v_week, 2)
+    ON CONFLICT (user_id, week_key, slot) DO NOTHING;
+
+    SELECT slot INTO v_token_slot FROM public.hatchling_stakes_tokens
+    WHERE user_id = auth.uid() AND week_key = v_week AND status = 'available'
+    ORDER BY slot LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN

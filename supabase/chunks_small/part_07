@@ -1,0 +1,100 @@
+RETURNS bigint
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_balance bigint;
+BEGIN
+  IF p_amount IS NULL OR p_amount <= 0 OR p_amount % 100 <> 0 THEN
+    RAISE EXCEPTION 'conversion amount must be a positive multiple of 100';
+  END IF;
+  IF p_amount > 10000 THEN
+    RAISE EXCEPTION 'conversion capped at 10000 lifesap per call';
+  END IF;
+
+  INSERT INTO public.lifesap_bankrolls (user_id, balance)
+  VALUES (auth.uid(), 1000)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  SELECT balance INTO v_balance FROM public.lifesap_bankrolls WHERE user_id = auth.uid();
+  IF v_balance IS NULL OR v_balance - p_amount < 500 THEN
+    RAISE EXCEPTION 'insufficient lifesap (500 must stay in your stack)';
+  END IF;
+
+  UPDATE public.lifesap_bankrolls
+  SET balance = balance - p_amount, updated_at = now()
+  WHERE user_id = auth.uid();
+
+  INSERT INTO public.lifesap_ledger (user_id, delta, balance_after, game, round_ref, reason)
+  VALUES (auth.uid(), -p_amount, v_balance - p_amount, 'cashier', NULL, 'arcade conversion');
+
+  RETURN v_balance - p_amount;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.poker_convert_lifesap(bigint) FROM public;
+GRANT EXECUTE ON FUNCTION public.poker_convert_lifesap(bigint) TO authenticated;
+
+-- Bust-out bailout: a signed-in keeper whose stack falls under 100 lifesap can
+-- claim a top-up back to 500 once per calendar day (server UTC). This keeps a
+-- busted player in the game without creating a farmable token faucet: the
+-- conversion floor (500 must stay in the stack) means bailout lifesap can only
+-- become tokens after genuine winnings at the tables.
+CREATE OR REPLACE FUNCTION public.poker_claim_bailout()
+RETURNS bigint
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_balance bigint;
+BEGIN
+  INSERT INTO public.lifesap_bankrolls (user_id, balance)
+  VALUES (auth.uid(), 1000)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  SELECT balance INTO v_balance FROM public.lifesap_bankrolls WHERE user_id = auth.uid();
+
+  IF v_balance IS NULL OR v_balance >= 100 THEN
+    RAISE EXCEPTION 'bailout only when busted (under 100 lifesap)';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.lifesap_ledger
+    WHERE user_id = auth.uid()
+      AND reason = 'daily bailout'
+      AND created_at >= date_trunc('day', now())
+  ) THEN
+    RAISE EXCEPTION 'bailout already claimed today';
+  END IF;
+
+  UPDATE public.lifesap_bankrolls
+  SET balance = 500, updated_at = now()
+  WHERE user_id = auth.uid();
+
+  INSERT INTO public.lifesap_ledger (user_id, delta, balance_after, game, round_ref, reason)
+  VALUES (auth.uid(), 500 - v_balance, 500, 'cashier', NULL, 'daily bailout');
+
+  RETURN 500;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.poker_claim_bailout() FROM public;
+GRANT EXECUTE ON FUNCTION public.poker_claim_bailout() TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- Hatchling Stakes
+-- (search_path = public, extensions wherever pgcrypto helpers are used —
+-- folds in 20260927_stakes_search_path_fix.sql)
+-- ----------------------------------------------------------------------------
+
+-- Weekly token ledger for the caller (creates this week's two slots).
+-- Exempt callers get 'unlimited: true' and skip token consumption.
+CREATE OR REPLACE FUNCTION public.hatchling_stakes_my_tokens()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_week text := to_char(date_trunc('week', now() AT TIME ZONE 'UTC'), 'YYYY-MM-DD');
+  v_next timestamptz := date_trunc('week', now() AT TIME ZONE 'UTC') + interval '7 days';

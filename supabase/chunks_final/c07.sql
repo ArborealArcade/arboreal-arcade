@@ -1,0 +1,134 @@
+CREATE OR REPLACE FUNCTION public.hatchling_stakes_session_public(p_wager_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_creator uuid;
+BEGIN
+  SELECT w.creator INTO v_creator FROM public.hatchling_stakes_wagers w WHERE w.id = p_wager_id;
+  IF NOT FOUND OR v_creator <> auth.uid() THEN
+    RAISE EXCEPTION 'wager not found';
+  END IF;
+  RETURN (
+    SELECT jsonb_build_object(
+      'wager_id', w.id,
+      'wager_state', w.state,
+      'mode', w.mode,
+      'game', w.game,
+      'rule_version', w.rule_version,
+      'npc_asset_key', w.npc_asset_key,
+      'npc_name', (SELECT a.trait_snapshot->>'name'
+                  FROM public.hatchling_stakes_animals a WHERE a.asset_key = w.npc_asset_key),
+      'tier', (SELECT e.snapshot->>'tier' FROM public.hatchling_stakes_wager_entries e
+               WHERE e.wager_id = w.id AND e.actor = auth.uid()),
+      'player_asset_key', (SELECT e.asset_key FROM public.hatchling_stakes_wager_entries e
+                           WHERE e.wager_id = w.id AND e.actor = auth.uid()),
+      'player_asset_name', (SELECT e.snapshot->'snapshot'->>'name'
+                            FROM public.hatchling_stakes_wager_entries e
+                            WHERE e.wager_id = w.id AND e.actor = auth.uid()),
+      'session_state', s.state,
+      'player_score', s.player_score,
+      'target_score', s.target_score,
+      'hands_played', s.hands_played,
+      'base_bet', s.base_bet,
+      'winner', s.winner,
+      'current_hand', s.current_hand,
+      'transcript', s.transcript,
+      'seed_commitment', s.seed_commitment
+    )
+    FROM public.hatchling_stakes_wagers w
+    JOIN public.hatchling_stakes_game_sessions s ON s.wager_id = w.id
+    WHERE w.id = p_wager_id
+  );
+END;
+$$;
+REVOKE ALL ON FUNCTION public.hatchling_stakes_session_public(uuid) FROM public;
+GRANT EXECUTE ON FUNCTION public.hatchling_stakes_session_public(uuid) TO authenticated;
+
+-- Store/replace the in-progress hand (trusted game service only, creator-scoped).
+CREATE OR REPLACE FUNCTION public.hatchling_stakes_session_set_hand(p_wager_id uuid, p_hand jsonb)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_creator uuid;
+  v_wstate text;
+BEGIN
+  SELECT w.creator, w.state INTO v_creator, v_wstate
+  FROM public.hatchling_stakes_wagers w WHERE w.id = p_wager_id;
+  IF NOT FOUND OR v_creator <> auth.uid() THEN
+    RAISE EXCEPTION 'wager not found';
+  END IF;
+  IF v_wstate <> 'in_progress' THEN
+    RAISE EXCEPTION 'wager not in progress';
+  END IF;
+  UPDATE public.hatchling_stakes_game_sessions
+  SET current_hand = COALESCE(p_hand, '{}'::jsonb), updated_at = now()
+  WHERE wager_id = p_wager_id;
+  RETURN true;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.hatchling_stakes_session_set_hand(uuid, jsonb) FROM public;
+GRANT EXECUTE ON FUNCTION public.hatchling_stakes_session_set_hand(uuid, jsonb) TO authenticated;
+
+-- Load the full server-side blackjack table for the wager creator.
+-- The shoe and the dealer's hole card stay server-side.
+CREATE OR REPLACE FUNCTION public.hatchling_stakes_bj_load(p_wager_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_creator uuid;
+BEGIN
+  SELECT creator INTO v_creator
+  FROM public.hatchling_stakes_wagers WHERE id = p_wager_id;
+  IF NOT FOUND OR v_creator <> auth.uid() THEN
+    RAISE EXCEPTION 'wager not found';
+  END IF;
+  RETURN (SELECT bj_state FROM public.hatchling_stakes_game_sessions
+          WHERE wager_id = p_wager_id);
+END;
+$$;
+REVOKE ALL ON FUNCTION public.hatchling_stakes_bj_load(uuid) FROM public;
+GRANT EXECUTE ON FUNCTION public.hatchling_stakes_bj_load(uuid) TO authenticated;
+
+-- Persist the full server-side blackjack table. Only while the wager is in progress.
+CREATE OR REPLACE FUNCTION public.hatchling_stakes_bj_save(p_wager_id uuid, p_state jsonb)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_creator uuid;
+  v_state text;
+BEGIN
+  SELECT creator, state INTO v_creator, v_state
+  FROM public.hatchling_stakes_wagers WHERE id = p_wager_id;
+  IF NOT FOUND OR v_creator <> auth.uid() THEN
+    RAISE EXCEPTION 'wager not found';
+  END IF;
+  IF v_state <> 'in_progress' THEN
+    RAISE EXCEPTION 'wager not in progress';
+  END IF;
+  UPDATE public.hatchling_stakes_game_sessions
+  SET bj_state = p_state, updated_at = now()
+  WHERE wager_id = p_wager_id;
+  RETURN true;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.hatchling_stakes_bj_save(uuid, jsonb) FROM public;
+GRANT EXECUTE ON FUNCTION public.hatchling_stakes_bj_save(uuid, jsonb) TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- Snake Duels — server-side card engine + state machine
+-- (mirrors src/lib/poker/duel-eval.ts; the client never evaluates)
+-- ----------------------------------------------------------------------------
+
+-- Friendly rank names shared by the evaluator.

@@ -1,0 +1,100 @@
+RETURNS TABLE (max_bet bigint, max_payout_mult numeric)
+LANGUAGE plpgsql IMMUTABLE
+AS $$
+BEGIN
+  CASE p_game
+    WHEN 'holdem' THEN RETURN QUERY SELECT 1000::bigint, 6::numeric;
+    WHEN 'blackjack' THEN RETURN QUERY SELECT 500::bigint, 12::numeric;
+    WHEN 'draw' THEN RETURN QUERY SELECT 50::bigint, 30000::numeric;
+    ELSE RAISE EXCEPTION 'unknown game %', p_game;
+  END CASE;
+END;
+$$;
+
+-- Debit a bet and open a round. Voids (refunds) the caller's expired open rounds first.
+CREATE OR REPLACE FUNCTION public.poker_place_bet(p_game text, p_bet bigint)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_max_bet bigint;
+  v_balance bigint;
+  v_round_id uuid;
+  v_exp interval;
+BEGIN
+  IF p_game NOT IN ('holdem', 'blackjack', 'draw') THEN
+    RAISE EXCEPTION 'unknown game %', p_game;
+  END IF;
+  SELECT max_bet INTO v_max_bet FROM public.poker_game_limits(p_game);
+  IF p_bet IS NULL OR p_bet <= 0 OR p_bet > v_max_bet THEN
+    RAISE EXCEPTION 'bet out of range';
+  END IF;
+
+  INSERT INTO public.lifesap_bankrolls (user_id, balance)
+  VALUES (auth.uid(), 1000)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  -- Refund expired open rounds before opening a new one.
+  UPDATE public.poker_rounds
+  SET state = 'voided', updated_at = now()
+  WHERE user_id = auth.uid() AND state = 'open' AND expires_at < now();
+
+  UPDATE public.lifesap_bankrolls b
+  SET balance = b.balance + r.bet + r.added_bet, updated_at = now()
+  FROM public.poker_rounds r
+  WHERE r.user_id = auth.uid() AND r.state = 'voided' AND r.payout IS NULL
+    AND b.user_id = auth.uid()
+    AND r.updated_at > now() - interval '1 minute';
+  -- Mark refunded so the sweep above never double-refunds.
+  UPDATE public.poker_rounds
+  SET payout = 0
+  WHERE user_id = auth.uid() AND state = 'voided' AND payout IS NULL
+    AND updated_at > now() - interval '1 minute';
+
+  IF EXISTS (SELECT 1 FROM public.poker_rounds
+             WHERE user_id = auth.uid() AND game = p_game AND state = 'open') THEN
+    RAISE EXCEPTION 'settle your open % round first', p_game;
+  END IF;
+
+  SELECT balance INTO v_balance FROM public.lifesap_bankrolls WHERE user_id = auth.uid();
+  IF v_balance < p_bet THEN
+    RAISE EXCEPTION 'insufficient lifesap';
+  END IF;
+
+  v_exp := CASE WHEN p_game = 'holdem' THEN interval '24 hours' ELSE interval '2 hours' END;
+
+  UPDATE public.lifesap_bankrolls
+  SET balance = balance - p_bet, updated_at = now()
+  WHERE user_id = auth.uid();
+
+  INSERT INTO public.poker_rounds (user_id, game, bet, expires_at)
+  VALUES (auth.uid(), p_game, p_bet, now() + v_exp)
+  RETURNING id INTO v_round_id;
+
+  INSERT INTO public.lifesap_ledger (user_id, delta, balance_after, game, round_ref, reason)
+  VALUES (auth.uid(), -p_bet, v_balance - p_bet, p_game, v_round_id, 'bet placed');
+
+  RETURN v_round_id;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.poker_place_bet(text, bigint) FROM public;
+GRANT EXECUTE ON FUNCTION public.poker_place_bet(text, bigint) TO authenticated;
+
+-- Hold'em rebuys top up the open round's stake (capped).
+CREATE OR REPLACE FUNCTION public.poker_add_rebuy(p_round_id uuid, p_amount bigint)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_balance bigint;
+BEGIN
+  IF p_amount IS NULL OR p_amount <= 0 OR p_amount > 1000 THEN
+    RAISE EXCEPTION 'rebuy out of range';
+  END IF;
+  SELECT balance INTO v_balance FROM public.lifesap_bankrolls WHERE user_id = auth.uid();
+  IF v_balance IS NULL OR v_balance < p_amount THEN
+    RAISE EXCEPTION 'insufficient lifesap';

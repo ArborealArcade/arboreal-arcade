@@ -1,0 +1,100 @@
+SET search_path = public
+AS $$
+DECLARE
+  v_creator uuid;
+  v_wstate text;
+BEGIN
+  SELECT w.creator, w.state INTO v_creator, v_wstate
+  FROM public.hatchling_stakes_wagers w WHERE w.id = p_wager_id;
+  IF NOT FOUND OR v_creator <> auth.uid() THEN
+    RAISE EXCEPTION 'wager not found';
+  END IF;
+  IF v_wstate <> 'in_progress' THEN
+    RAISE EXCEPTION 'wager not in progress';
+  END IF;
+  UPDATE public.hatchling_stakes_game_sessions
+  SET transcript = transcript || COALESCE(p_event, '{}'::jsonb),
+      player_score = COALESCE(p_player_score, player_score),
+      hands_played = COALESCE(p_hands_played, hands_played),
+      updated_at = now()
+  WHERE wager_id = p_wager_id;
+  RETURN true;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.hatchling_stakes_session_append(uuid, jsonb, int, int) FROM public;
+GRANT EXECUTE ON FUNCTION public.hatchling_stakes_session_append(uuid, jsonb, int, int) TO authenticated;
+
+-- Atomic settlement: one winner, exactly once. Appends ownership events for both
+-- assets, transfers canonical ownership, releases locks, completes the wager.
+-- Idempotent: replays return the original receipt.
+CREATE OR REPLACE FUNCTION public.hatchling_stakes_settle(
+  p_wager_id uuid, p_winner uuid, p_player_score int
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+DECLARE
+  v_state text;
+  v_creator uuid;
+  v_player_asset text;
+  v_npc_asset text;
+  v_seq int;
+  v_npc uuid := '00000000-0000-0000-0000-000000000000';
+BEGIN
+  SELECT state, creator INTO v_state, v_creator
+  FROM public.hatchling_stakes_wagers WHERE id = p_wager_id FOR UPDATE;
+  IF NOT FOUND OR v_creator <> auth.uid() THEN
+    RAISE EXCEPTION 'wager not found';
+  END IF;
+  IF v_state = 'complete' THEN
+    RETURN jsonb_build_object('wager_id', p_wager_id, 'state', 'complete', 'replay', true,
+      'winner', (SELECT winner FROM public.hatchling_stakes_game_sessions WHERE wager_id = p_wager_id));
+  END IF;
+  IF v_state <> 'in_progress' THEN
+    RAISE EXCEPTION 'wager not settleable';
+  END IF;
+  IF p_winner <> auth.uid() AND p_winner <> v_npc THEN
+    RAISE EXCEPTION 'bad winner';
+  END IF;
+
+  SELECT asset_key INTO v_player_asset FROM public.hatchling_stakes_wager_entries
+  WHERE wager_id = p_wager_id AND actor = auth.uid();
+  SELECT asset_key INTO v_npc_asset FROM public.hatchling_stakes_wager_entries
+  WHERE wager_id = p_wager_id AND actor = v_npc;
+
+  UPDATE public.hatchling_stakes_wagers SET state = 'settling', updated_at = now()
+  WHERE id = p_wager_id;
+
+  -- Ownership ledger: winner takes both.
+  SELECT COALESCE(max(seq), 0) + 1 INTO v_seq FROM public.hatchling_stakes_ownership_events
+  WHERE asset_key = v_player_asset;
+  INSERT INTO public.hatchling_stakes_ownership_events (asset_key, from_user, to_user, reason, seq)
+  VALUES (v_player_asset, auth.uid(), p_winner, 'wager_settlement', v_seq);
+  SELECT COALESCE(max(seq), 0) + 1 INTO v_seq FROM public.hatchling_stakes_ownership_events
+  WHERE asset_key = v_npc_asset;
+  INSERT INTO public.hatchling_stakes_ownership_events (asset_key, from_user, to_user, reason, seq)
+  VALUES (v_npc_asset, v_npc, p_winner, 'wager_settlement', v_seq);
+
+  UPDATE public.hatchling_stakes_animals
+  SET owner = p_winner, state = 'active'
+  WHERE asset_key IN (v_player_asset, v_npc_asset);
+
+  DELETE FROM public.hatchling_stakes_wager_locks WHERE wager_id = p_wager_id;
+  UPDATE public.hatchling_stakes_npc_inventory SET state = 'awarded'
+  WHERE asset_key = v_npc_asset;
+
+  UPDATE public.hatchling_stakes_game_sessions
+  SET winner = p_winner, player_score = p_player_score, state = 'complete', updated_at = now()
+  WHERE wager_id = p_wager_id;
+
+  INSERT INTO public.hatchling_stakes_wager_events (wager_id, seq, type, payload_hash, payload)
+  VALUES (p_wager_id,
+          (SELECT COALESCE(max(seq), 0) + 1 FROM public.hatchling_stakes_wager_events WHERE wager_id = p_wager_id),
+          'settled', encode(digest(p_wager_id::text || p_winner::text, 'sha256'), 'hex'),
+          jsonb_build_object('winner', p_winner, 'player_score', p_player_score));
+
+  UPDATE public.hatchling_stakes_wagers SET state = 'complete', updated_at = now()
+  WHERE id = p_wager_id;
+

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { loadChondroSaveState } from "@/lib/chondro-save";
+import { loadChondroSaveState, readLocalSaveState } from "@/lib/chondro-save";
 
 type Animal = { id?: string; name?: string; sex?: string; lifeStage?: string };
 type Cycle = { damId?: string; sireId?: string; stage?: string; completesAt?: number };
@@ -93,7 +93,14 @@ export function ChondroBreedingFocusHeader() {
       } catch {}
     }
     void load();
-    const refresh = () => void load();
+    // Fast local refresh on save changes: the event fires after localStorage
+    // is updated, so read it directly instead of hitting the network.
+    const refresh = () => {
+      try {
+        const state = readLocalSaveState();
+        if (active && state) setSave(state);
+      } catch {}
+    };
     const tick = () => setNow(Date.now());
     const firstTick = window.setTimeout(tick, 0);
     const timer = window.setInterval(tick, 30_000);

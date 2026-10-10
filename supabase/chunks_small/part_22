@@ -1,0 +1,100 @@
+                          THEN d.opponent_hole END
+  );
+END;
+$$;
+REVOKE ALL ON FUNCTION public.snake_duels_state(uuid) FROM public;
+GRANT EXECUTE ON FUNCTION public.snake_duels_state(uuid) TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- Arcade wallets
+-- ----------------------------------------------------------------------------
+
+-- First-sync seed: adopt the larger of the server balance and the device
+-- balance, so signing in on a new device never wipes earned tokens.
+CREATE OR REPLACE FUNCTION public.arcade_wallet_seed(p_amount integer)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  uid uuid := auth.uid();
+  v_balance integer;
+BEGIN
+  IF uid IS NULL THEN
+    RAISE EXCEPTION 'Not signed in.';
+  END IF;
+  INSERT INTO public.arcade_wallets (user_id, balance)
+  VALUES (uid, greatest(0, coalesce(p_amount, 0)))
+  ON CONFLICT (user_id) DO UPDATE
+    SET balance = greatest(
+          public.arcade_wallets.balance,
+          greatest(0, coalesce(p_amount, 0))
+        ),
+        updated_at = now()
+  RETURNING balance INTO v_balance;
+  RETURN v_balance;
+END
+$$;
+REVOKE ALL ON FUNCTION public.arcade_wallet_seed(integer) FROM public;
+GRANT EXECUTE ON FUNCTION public.arcade_wallet_seed(integer) TO authenticated;
+
+-- Every earn/spend lands here: atomic, clamped at zero so a balance can
+-- never go negative no matter how many devices spend at once.
+CREATE OR REPLACE FUNCTION public.arcade_wallet_delta(p_delta integer)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  uid uuid := auth.uid();
+  v_balance integer;
+BEGIN
+  IF uid IS NULL THEN
+    RAISE EXCEPTION 'Not signed in.';
+  END IF;
+  INSERT INTO public.arcade_wallets (user_id, balance)
+  VALUES (uid, greatest(0, coalesce(p_delta, 0)))
+  ON CONFLICT (user_id) DO UPDATE
+    SET balance = greatest(0, public.arcade_wallets.balance + coalesce(p_delta, 0)),
+        updated_at = now()
+  RETURNING balance INTO v_balance;
+  RETURN v_balance;
+END
+$$;
+REVOKE ALL ON FUNCTION public.arcade_wallet_delta(integer) FROM public;
+GRANT EXECUTE ON FUNCTION public.arcade_wallet_delta(integer) TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- Event codes
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.redeem_event_code(p_code text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  uid uuid := auth.uid();
+  v_code public.event_codes%ROWTYPE;
+  v_claims integer;
+  v_state jsonb;
+BEGIN
+  IF uid IS NULL THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'Sign in to redeem a code.');
+  END IF;
+
+  SELECT * INTO v_code FROM public.event_codes WHERE code = upper(btrim(p_code));
+  IF NOT FOUND OR NOT v_code.active THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'That code is not active.');
+  END IF;
+  IF v_code.starts_at IS NOT NULL AND now() < v_code.starts_at THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'That code has not started yet.');
+  END IF;
+  IF v_code.expires_at IS NOT NULL AND now() > v_code.expires_at THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'That code has expired.');
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.event_code_claims c WHERE c.code = v_code.code AND c.user_id = uid) THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'You already claimed this code.');
+  END IF;

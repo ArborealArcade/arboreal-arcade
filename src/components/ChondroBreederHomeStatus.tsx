@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { loadChondroSaveState } from "@/lib/chondro-save";
+import { loadChondroSaveState, readLocalSaveState } from "@/lib/chondro-save";
 import { animalHousingCapacity } from "@/lib/chondro-facility-limits"; import { claimMarketProceeds } from "@/lib/chondro-claim";
 
 type CoreView = "breeding" | "colony" | "clutches" | "market" | "conservation";
@@ -96,7 +96,15 @@ export function ChondroBreederHomeStatus({ onOpen }: { onOpen: (view: CoreView) 
     const tick = () => setNow(Date.now());
     const first = window.setTimeout(tick, 0);
     const timer = window.setInterval(tick, 30_000);
-    const refresh = () => void load();
+    // Fast local refresh on save changes: the event fires after localStorage
+    // is updated, so read it directly. Market/conservation don't change on
+    // save edits like holdback toggles, so skip those fetches here.
+    const refresh = () => {
+      try {
+        const state = readLocalSaveState();
+        if (active && state) setSave(state as Save);
+      } catch {}
+    };
     window.addEventListener("arboreal-chondro-breeder-save-change", refresh);
     window.addEventListener("chondro-conservation-updated", refresh);
     window.addEventListener("arboreal-chondro-favorites-change", refresh);

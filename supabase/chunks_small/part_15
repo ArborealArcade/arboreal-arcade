@@ -1,0 +1,100 @@
+  IF NOT FOUND OR v_creator <> auth.uid() THEN
+    RAISE EXCEPTION 'wager not found';
+  END IF;
+  IF v_state <> 'in_progress' THEN
+    RAISE EXCEPTION 'wager not in progress';
+  END IF;
+  UPDATE public.hatchling_stakes_game_sessions
+  SET bj_state = p_state, updated_at = now()
+  WHERE wager_id = p_wager_id;
+  RETURN true;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.hatchling_stakes_bj_save(uuid, jsonb) FROM public;
+GRANT EXECUTE ON FUNCTION public.hatchling_stakes_bj_save(uuid, jsonb) TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- Snake Duels — server-side card engine + state machine
+-- (mirrors src/lib/poker/duel-eval.ts; the client never evaluates)
+-- ----------------------------------------------------------------------------
+
+-- Friendly rank names shared by the evaluator.
+CREATE OR REPLACE FUNCTION public.snake_duels_rank_name(p_rank int)
+RETURNS text
+LANGUAGE sql IMMUTABLE
+SET search_path = public
+AS $$ SELECT CASE p_rank
+  WHEN 14 THEN 'Ace' WHEN 13 THEN 'King' WHEN 12 THEN 'Queen' WHEN 11 THEN 'Jack'
+  ELSE p_rank::text END $$;
+
+-- Compare two eval scores: 1 / 0 / -1.
+CREATE OR REPLACE FUNCTION public.snake_duels_cmp_score(a int[], b int[])
+RETURNS int
+LANGUAGE plpgsql IMMUTABLE
+SET search_path = public
+AS $func$
+DECLARE
+  i int;
+  n int;
+  d int;
+BEGIN
+  n := greatest(coalesce(array_length(a, 1), 0), coalesce(array_length(b, 1), 0));
+  FOR i IN 1..n LOOP
+    d := coalesce(a[i], 0) - coalesce(b[i], 0);
+    IF d <> 0 THEN
+      RETURN CASE WHEN d > 0 THEN 1 ELSE -1 END;
+    END IF;
+  END LOOP;
+  RETURN 0;
+END;
+$func$;
+
+-- Evaluate one 5-card hand. Cards are "As"-style strings ("10d" for ten).
+CREATE OR REPLACE FUNCTION public.snake_duels_eval5(p_cards text[])
+RETURNS public.snake_duels_eval
+LANGUAGE plpgsql IMMUTABLE
+SET search_path = public
+AS $func$
+DECLARE
+  c text;
+  rank_txt text;
+  v_rank int;
+  sr int[] := '{}';      -- ranks sorted desc
+  v_suits text[] := '{}';
+  i int; j int; tmp int;
+  v_flush boolean;
+  v_uniq int[] := '{}';  -- distinct ranks desc
+  v_straight int := 0;
+  v_counts int[] := array_fill(0, ARRAY[15]);
+  v_grank int[] := '{}'; -- group ranks: count desc, then rank desc
+  v_gcount int[] := '{}';
+  v_score int[];
+  v_name text;
+  v_kickers int[];
+BEGIN
+  IF coalesce(array_length(p_cards, 1), 0) <> 5 THEN
+    RAISE EXCEPTION 'eval5 needs exactly 5 cards';
+  END IF;
+  FOREACH c IN ARRAY p_cards LOOP
+    rank_txt := substring(c from 1 for char_length(c) - 1);
+    v_rank := CASE upper(rank_txt)
+      WHEN 'A' THEN 14 WHEN 'K' THEN 13 WHEN 'Q' THEN 12 WHEN 'J' THEN 11
+      ELSE rank_txt::int END;
+    sr := sr || v_rank;
+    v_suits := v_suits || lower(right(c, 1));
+  END LOOP;
+  -- insertion sort, descending
+  FOR i IN 2..5 LOOP
+    tmp := sr[i]; j := i - 1;
+    WHILE j >= 1 AND sr[j] < tmp LOOP sr[j + 1] := sr[j]; j := j - 1; END LOOP;
+    sr[j + 1] := tmp;
+  END LOOP;
+  v_flush := v_suits[1] = v_suits[2] AND v_suits[2] = v_suits[3]
+         AND v_suits[3] = v_suits[4] AND v_suits[4] = v_suits[5];
+  FOR i IN 1..5 LOOP
+    IF i = 1 OR sr[i] <> sr[i - 1] THEN v_uniq := v_uniq || sr[i]; END IF;
+  END LOOP;
+  IF array_length(v_uniq, 1) = 5 THEN
+    IF v_uniq[1] - v_uniq[5] = 4 THEN v_straight := v_uniq[1];
+    ELSIF v_uniq[1] = 14 AND v_uniq[2] = 5 THEN v_straight := 5; END IF;
+  END IF;

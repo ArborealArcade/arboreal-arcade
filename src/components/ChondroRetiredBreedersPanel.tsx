@@ -69,7 +69,12 @@ export function ChondroRetiredBreedersPanel() {
       }
     }
     void load();
-    const refresh = () => void load();
+    // Fast local refresh on save changes: the event fires after localStorage
+    // is updated, so read it directly instead of hitting the network.
+    const refresh = () => {
+      if (cancelled) return;
+      setSave(readLocalSave());
+    };
     window.addEventListener("arboreal-chondro-breeder-save-change", refresh);
     return () => {
       cancelled = true;

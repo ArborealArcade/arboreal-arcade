@@ -1,0 +1,100 @@
+);
+
+CREATE TABLE IF NOT EXISTS public.lifesap_ledger (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  delta bigint NOT NULL,
+  balance_after bigint NOT NULL,
+  game text NOT NULL,
+  round_ref uuid,
+  reason text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS lifesap_ledger_user_idx ON public.lifesap_ledger (user_id, created_at DESC);
+
+-- Open card rounds: a bet is debited up front; settle credits a bounded payout.
+CREATE TABLE IF NOT EXISTS public.poker_rounds (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  game text NOT NULL CHECK (game IN ('holdem', 'blackjack', 'draw')),
+  bet bigint NOT NULL CHECK (bet > 0),
+  added_bet bigint NOT NULL DEFAULT 0 CHECK (added_bet >= 0),
+  state text NOT NULL DEFAULT 'open' CHECK (state IN ('open', 'settled', 'voided')),
+  payout bigint,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz NOT NULL DEFAULT now() + interval '2 hours'
+);
+CREATE INDEX IF NOT EXISTS poker_rounds_user_state_idx ON public.poker_rounds (user_id, game, state);
+
+ALTER TABLE public.lifesap_bankrolls ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.lifesap_ledger ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.poker_rounds ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON TABLE public.lifesap_bankrolls FROM public, anon, authenticated;
+REVOKE ALL ON TABLE public.lifesap_ledger FROM public, anon, authenticated;
+REVOKE ALL ON TABLE public.poker_rounds FROM public, anon, authenticated;
+-- No grants: RPC-only tables.
+
+-- ----------------------------------------------------------------------------
+-- §4 HATCHLING STAKES (NPC pilot) — sidecar provenance registry + game state
+-- No direct client access: everything flows through the RPCs in §11.
+-- NOTE: source CHECK is the widened version (20260927_stakes_claimed_source):
+--   'breeder-registered' | 'npc' | 'inventory-claim'
+-- NOTE: wagers.game CHECK is the widened version (20260928_snake_duels_pvp):
+--   'blackjack' | 'draw' | 'duel'
+-- NOTE: game_sessions carries BOTH current_hand (20260926 §4) and bj_state
+--   (20260928_stakes_den_blackjack) columns.
+-- ----------------------------------------------------------------------------
+
+-- Immutable server-issued proof that breeder X produced clutch Y.
+CREATE TABLE IF NOT EXISTS public.hatchling_stakes_breeding_events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  breeder uuid NOT NULL,
+  clutch_fingerprint text NOT NULL,
+  parents jsonb NOT NULL DEFAULT '{}'::jsonb,
+  genetics jsonb NOT NULL DEFAULT '{}'::jsonb,
+  occurred_at timestamptz NOT NULL DEFAULT now(),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (breeder, clutch_fingerprint)
+);
+
+-- Canonical asset registry. asset_key is server-issued and survives renames.
+CREATE TABLE IF NOT EXISTS public.hatchling_stakes_animals (
+  asset_key text PRIMARY KEY,
+  producer uuid NOT NULL,
+  owner uuid NOT NULL,
+  source text NOT NULL CHECK (source IN ('breeder-registered', 'npc', 'inventory-claim')),
+  tier text NOT NULL CHECK (tier IN ('sprout', 'vine', 'canopy', 'emergent', 'crown')),
+  trait_snapshot jsonb NOT NULL DEFAULT '{}'::jsonb,
+  state text NOT NULL DEFAULT 'active' CHECK (state IN ('active', 'staked', 'transferred', 'retired')),
+  breeding_event_id uuid REFERENCES public.hatchling_stakes_breeding_events(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS hs_animals_owner_idx ON public.hatchling_stakes_animals (owner, state);
+
+-- Append-only ownership ledger.
+CREATE TABLE IF NOT EXISTS public.hatchling_stakes_ownership_events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  asset_key text NOT NULL REFERENCES public.hatchling_stakes_animals(asset_key) ON DELETE CASCADE,
+  from_user uuid,
+  to_user uuid,
+  reason text NOT NULL,
+  seq int NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (asset_key, seq)
+);
+
+-- Anti-double-spend sidecar: one active lock per asset.
+CREATE TABLE IF NOT EXISTS public.hatchling_stakes_wager_locks (
+  asset_key text PRIMARY KEY REFERENCES public.hatchling_stakes_animals(asset_key) ON DELETE CASCADE,
+  wager_id uuid NOT NULL,
+  state text NOT NULL DEFAULT 'active' CHECK (state IN ('active', 'released')),
+  expires_at timestamptz NOT NULL DEFAULT now() + interval '1 hour'
+);
+
+CREATE TABLE IF NOT EXISTS public.hatchling_stakes_wagers (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  mode text NOT NULL DEFAULT 'npc' CHECK (mode IN ('npc', 'keeper')),
+  game text NOT NULL DEFAULT 'blackjack' CHECK (game IN ('blackjack', 'draw', 'duel')),
+  state text NOT NULL DEFAULT 'locked'

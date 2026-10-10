@@ -1,0 +1,100 @@
+  d record;
+  v_week text := to_char(date_trunc('week', now() AT TIME ZONE 'UTC'), 'YYYY-MM-DD');
+  v_token_slot int;
+  v_exempt boolean;
+  v_tier text;
+  v_snapshot jsonb;
+  v_deck text[];
+BEGIN
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'not signed in'; END IF;
+  SELECT * INTO d FROM public.snake_duels WHERE id = p_duel_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'challenge not found'; END IF;
+  PERFORM public.snake_duels_expire(p_duel_id);
+  SELECT * INTO d FROM public.snake_duels WHERE id = p_duel_id;
+  IF d.state <> 'open' THEN RAISE EXCEPTION 'challenge not open'; END IF;
+  IF d.challenger = v_uid THEN RAISE EXCEPTION 'cannot accept your own challenge'; END IF;
+
+  SELECT tier, trait_snapshot INTO v_tier, v_snapshot
+  FROM public.hatchling_stakes_animals
+  WHERE asset_key = p_asset_key AND producer = v_uid AND owner = v_uid
+    AND source IN ('breeder-registered', 'inventory-claim') AND state = 'active' FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'snake not available'; END IF;
+  IF v_tier <> d.tier THEN RAISE EXCEPTION 'tier must match'; END IF;
+  IF EXISTS (SELECT 1 FROM public.hatchling_stakes_wager_locks
+             WHERE asset_key = p_asset_key AND state = 'active') THEN
+    RAISE EXCEPTION 'snake is locked in another game';
+  END IF;
+
+  SELECT EXISTS (
+    SELECT 1 FROM public.hatchling_stakes_token_exemptions WHERE user_id = v_uid
+  ) INTO v_exempt;
+  IF NOT v_exempt THEN
+    INSERT INTO public.hatchling_stakes_tokens (user_id, week_key, slot)
+    VALUES (v_uid, v_week, 1), (v_uid, v_week, 2)
+    ON CONFLICT (user_id, week_key, slot) DO NOTHING;
+    SELECT slot INTO v_token_slot FROM public.hatchling_stakes_tokens
+    WHERE user_id = v_uid AND week_key = v_week AND status = 'available'
+    ORDER BY slot LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN RAISE EXCEPTION 'no duel token available'; END IF;
+  END IF;
+
+  INSERT INTO public.hatchling_stakes_wager_entries (wager_id, actor, asset_key, snapshot)
+  VALUES (d.wager_id, v_uid, p_asset_key,
+          jsonb_build_object('tier', v_tier, 'snapshot', v_snapshot, 'side', 'opponent'));
+  INSERT INTO public.hatchling_stakes_wager_locks (asset_key, wager_id)
+  VALUES (p_asset_key, d.wager_id);
+  UPDATE public.hatchling_stakes_animals SET state = 'staked' WHERE asset_key = p_asset_key;
+  INSERT INTO public.hatchling_stakes_wager_events (wager_id, seq, type, payload_hash, payload)
+  VALUES (d.wager_id,
+          (SELECT coalesce(max(seq), 0) + 1 FROM public.hatchling_stakes_wager_events WHERE wager_id = d.wager_id),
+          'duel_started', encode(digest(d.wager_id::text || p_asset_key, 'sha256'), 'hex'),
+          jsonb_build_object('opponent_asset', p_asset_key, 'tier', v_tier));
+
+  IF NOT v_exempt THEN
+    UPDATE public.hatchling_stakes_tokens
+    SET status = 'reserved', wager_id = d.wager_id, updated_at = now()
+    WHERE user_id = v_uid AND week_key = v_week AND slot = v_token_slot;
+  END IF;
+
+  -- The house shuffle: no caller input, no caller visibility.
+  v_deck := public.snake_duels_shuffled_deck();
+  UPDATE public.snake_duels
+  SET state = 'in_progress',
+      opponent = v_uid,
+      opponent_snake = p_asset_key,
+      challenger_hole = to_jsonb(v_deck[1:2]),
+      opponent_hole = to_jsonb(v_deck[3:4]),
+      deck = to_jsonb(v_deck),
+      -- a fresh 48h clock from the moment the duel actually starts
+      expires_at = now() + interval '48 hours'
+  WHERE id = p_duel_id;
+
+  RETURN public.snake_duels_state(p_duel_id);
+END;
+$$;
+REVOKE ALL ON FUNCTION public.snake_duels_accept(uuid, text) FROM public;
+GRANT EXECUTE ON FUNCTION public.snake_duels_accept(uuid, text) TO authenticated;
+
+-- Lock in a run/fold decision. A fold ends the duel at once (the other
+-- snake wins). When both decisions are in, the duel moves to 'settling' and
+-- the API route calls snake_duels_settle to finish it.
+CREATE OR REPLACE FUNCTION public.snake_duels_decide(p_duel_id uuid, p_decision text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_uid uuid := auth.uid();
+  d record;
+  v_is_challenger boolean;
+  v_other_decision text;
+BEGIN
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'not signed in'; END IF;
+  IF p_decision NOT IN ('run', 'fold') THEN RAISE EXCEPTION 'bad decision'; END IF;
+  SELECT * INTO d FROM public.snake_duels WHERE id = p_duel_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'duel not found'; END IF;
+  PERFORM public.snake_duels_expire(p_duel_id);
+  SELECT * INTO d FROM public.snake_duels WHERE id = p_duel_id;
+
+  IF d.state = 'settling' THEN
