@@ -2302,8 +2302,8 @@ export function ChondroBreederGameV3({ screen = "all" }: { screen?: BreederGameS
           starts, and the catch handler re-checks capacity before importing —
           catches are never partially imported or dropped. */}
       {expeditionOpen ? (
-        <div role="dialog" aria-modal="true" aria-label="Canopy Hunter expedition" onClick={(event) => { if (event.target === event.currentTarget && !expeditionEntered) closeExpedition(); }} className="fixed inset-0 z-[90] overflow-y-auto bg-black/80 p-3 backdrop-blur-sm sm:p-6">
-          <div className="mx-auto max-w-4xl rounded-[30px] border border-white/[.09] bg-[#09120e] p-5 shadow-2xl sm:p-7">
+        <div role="dialog" aria-modal="true" aria-label="Canopy Hunter expedition" onClick={(event) => { if (event.target === event.currentTarget && !expeditionEntered) closeExpedition(); }} className="fixed inset-0 z-[90] overflow-y-auto bg-black/80 p-3 backdrop-blur-sm sm:p-6" style={{ touchAction: "pan-x pan-y" }}>
+          <div className="mx-auto w-full max-w-4xl overflow-x-hidden rounded-[30px] border border-white/[.09] bg-[#09120e] p-5 shadow-2xl sm:p-7">
             {!expeditionEntered ? (
             <div className="flex items-center justify-between gap-4">
               <div>
