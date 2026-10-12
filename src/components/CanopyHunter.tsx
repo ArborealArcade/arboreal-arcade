@@ -141,14 +141,34 @@ function rollTrailFindId(): string {
 }
 
 const BOATMAN_LINES: Record<string, string> = {
-  cenderawasih:
-    "“The Cenderawasih swallows whole rivers and gives back snakes. Biak boys hunt it by lamplight — you'd fit right in.”",
-  "birds-head":
-    "“Bird's Head rain comes sideways and stays. The Arfak road's drowned to the axles — take my boat or stay poor.”",
-  highlands:
-    "“Highlands boats ride low and slow. Cyclops throws boulders at strangers, but the snakes don't mind strangers.”",
-  southern:
-    "“Southern water's black as tea and twice as strong. Merauke men swear the Aru pythons swim — I don't ask.”",
+  biak:
+    "“Biak boys hunt by lamplight — you'd fit right in.”",
+  numfor:
+    "“Numfor's a hard crossing, but the blacks there are worth it.”",
+  yapen:
+    "“Yapen? You're braver than most. Ghosts live there.”",
+  sorong:
+    "“Sorong rain comes sideways and stays. Take my boat or stay poor.”",
+  manokwari:
+    "“Manokwari coast — the Arfak road's drowned to the axles.”",
+  arfak:
+    "“Arfak? The mountain eats men. But the snakes...”",
+  kofiau:
+    "“Kofiau isles — yellow ghosts in the canopy.”",
+  timika:
+    "“Timika basin — go deep or go home.”",
+  wamena:
+    "“Wamena highlands — thin air, rare snakes.”",
+  jayapura:
+    "“Jayapura coast — Cyclops throws boulders at strangers.”",
+  cyclops:
+    "“Cyclops range — moss forest and blue stripes.”",
+  lereh:
+    "“Lereh lowlands — keep your lamp dry.”",
+  aru:
+    "“Aru pythons swim, the men swear it. I don't ask.”",
+  merauke:
+    "“Southern water's black as tea and twice as strong.”",
   default:
     "“River's kind tonight, Gage. Next leg's darker than the last — keep your lamp dry.”",
 };
@@ -1179,7 +1199,7 @@ export function CanopyHunter({
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div className="mx-auto w-full max-w-3xl overflow-x-hidden">
       <style>{`@keyframes ch-sway { 0%,100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg); } }
 @keyframes ch-firefly { 0%,100% { transform: translate(0,0); opacity: .25; } 50% { transform: translate(10px,-14px); opacity: 1; } }
 @keyframes ch-rustle { 0%,100% { transform: rotate(-18deg) translateY(0); opacity: .55; } 50% { transform: rotate(24deg) translateY(-3px); opacity: 1; } }

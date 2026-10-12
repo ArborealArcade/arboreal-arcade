@@ -2205,7 +2205,7 @@ export function ChondroBreederGameV3({ screen = "all" }: { screen?: BreederGameS
 
       {selectedAnimal ? (
         <div role="dialog" aria-modal="true" aria-label={`Snake record · ${selectedAnimal.name || "Unnamed snake"}`} onClick={(event) => { if (event.target === event.currentTarget) setSelectedSnakeId(null); }} className="fixed inset-0 z-50 overflow-y-auto bg-black/80 p-3 backdrop-blur-sm sm:p-6">
-          <div className="mx-auto max-w-4xl rounded-[30px] border border-white/[.09] bg-[#09120e] p-5 shadow-2xl sm:p-7">
+          <div className="mx-auto w-full max-w-4xl rounded-[30px] border border-white/[.09] bg-[#09120e] p-5 shadow-2xl sm:p-7">
             <div className="flex items-center justify-between gap-4"><div><div className="section-kicker">Snake record · {selectedAnimal.id}</div><h2 className="mt-2 text-3xl font-semibold">{selectedAnimal.name || "Unnamed snake"}</h2></div><button onClick={() => setSelectedSnakeId(null)} className="rounded-xl border border-white/[.09] px-4 py-2 text-sm font-bold text-white/60">Close</button></div>
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
               <div>
@@ -2302,7 +2302,7 @@ export function ChondroBreederGameV3({ screen = "all" }: { screen?: BreederGameS
           starts, and the catch handler re-checks capacity before importing —
           catches are never partially imported or dropped. */}
       {expeditionOpen ? (
-        <div role="dialog" aria-modal="true" aria-label="Canopy Hunter expedition" onClick={(event) => { if (event.target === event.currentTarget && !expeditionEntered) closeExpedition(); }} className="fixed inset-0 z-[90] overflow-y-auto bg-black/80 p-3 backdrop-blur-sm sm:p-6" style={{ touchAction: "pan-x pan-y" }}>
+        <div role="dialog" aria-modal="true" aria-label="Canopy Hunter expedition" onClick={(event) => { if (event.target === event.currentTarget && !expeditionEntered) closeExpedition(); }} className="fixed inset-0 z-[90] overflow-y-auto overflow-x-hidden bg-black/80 p-3 backdrop-blur-sm sm:p-6" style={{ touchAction: "pan-x pan-y" }}>
           <div className="mx-auto w-full max-w-4xl overflow-x-hidden rounded-[30px] border border-white/[.09] bg-[#09120e] p-5 shadow-2xl sm:p-7">
             {!expeditionEntered ? (
             <div className="flex items-center justify-between gap-4">

@@ -81,12 +81,12 @@ export const PERMIT_TOKENS = 2;
 /** Hunted groves rest before they can be visited again. */
 export const REGION_RECOVERY_MS = 3 * 24 * 60 * 60 * 1000;
 
-/** Subspecies → the region a permit for it hunts. */
+/** Subspecies → a representative region for permits (one per subspecies). */
 export const SUBSPECIES_REGION_ID: Record<CanopySubspecies, CanopyRegion["id"]> = {
-  "Morelia azurea azurea": "cenderawasih",
-  "Morelia azurea pulcher": "birds-head",
-  "Morelia azurea utaraensis": "highlands",
-  "Morelia viridis": "southern",
+  "Morelia azurea azurea": "biak",
+  "Morelia azurea pulcher": "sorong",
+  "Morelia azurea utaraensis": "jayapura",
+  "Morelia viridis": "aru",
 };
 
 export function regionForSubspecies(sub: CanopySubspecies): CanopyRegion {
@@ -321,43 +321,144 @@ export interface CanopyRegion {
 }
 
 /**
- * One expedition = one region. Finds only come from that region's
- * localities — no bagging an Aru and a Jayapura on the same night.
+ * One expedition = one locality. Each locality is its own region —
+ * no more bagging a Biak and a Numfor on the same night.
+ * Region selection is weighted by rarity (see RARITY_WEIGHTS).
  */
 export const CANOPY_REGIONS: CanopyRegion[] = [
   {
-    id: "cenderawasih",
-    name: "Cenderawasih Islands",
-    tagline: "Island canopy off the north coast.",
-    localities: ["Biak", "Numfor", "Yapen"],
+    id: "biak",
+    name: "Biak Island",
+    tagline: "Island canopy off the north coast — true azurea country.",
+    localities: ["Biak"],
     traitLean: ["highBlack", "yellowRetention"],
   },
   {
-    id: "birds-head",
-    name: "Bird's Head West",
-    tagline: "Vogelkop lowlands and the Raja Ampat isles.",
-    localities: ["Sorong", "Manokwari", "Arfak", "Kofiau", "Timika"],
+    id: "numfor",
+    name: "Numfor Island",
+    tagline: "Remote island canopy, elusive high-blacks.",
+    localities: ["Numfor"],
+    traitLean: ["highBlack", "yellowRetention"],
+  },
+  {
+    id: "yapen",
+    name: "Yapen Island",
+    tagline: "Deep island interior — a legendary hunt.",
+    localities: ["Yapen"],
+    traitLean: ["highBlack", "yellowRetention"],
+  },
+  {
+    id: "sorong",
+    name: "Sorong Lowlands",
+    tagline: "Vogelkop lowlands — pulcher heartland.",
+    localities: ["Sorong"],
     traitLean: ["yellowRetention", "blueStripe"],
   },
   {
-    id: "highlands",
-    name: "Highlands & North Coast",
-    tagline: "Moss forest, mountain valleys, and the Cyclops range.",
-    localities: ["Wamena", "Jayapura", "Cyclops", "Lereh"],
+    id: "manokwari",
+    name: "Manokwari Coast",
+    tagline: "North coast forests near the Arfak range.",
+    localities: ["Manokwari"],
+    traitLean: ["yellowRetention", "blueStripe"],
+  },
+  {
+    id: "arfak",
+    name: "Arfak Mountains",
+    tagline: "High mountain moss forest — a ghost hunt.",
+    localities: ["Arfak"],
+    traitLean: ["yellowRetention", "blueStripe"],
+  },
+  {
+    id: "kofiau",
+    name: "Kofiau Island",
+    tagline: "Raja Ampat isles — legendary yellow-only.",
+    localities: ["Kofiau"],
+    traitLean: ["yellowRetention", "blueStripe"],
+  },
+  {
+    id: "timika",
+    name: "Timika Basin",
+    tagline: "Southern lowlands basin — a ghost hunt.",
+    localities: ["Timika"],
+    traitLean: ["yellowRetention", "blueStripe"],
+  },
+  {
+    id: "wamena",
+    name: "Wamena Highlands",
+    tagline: "Highland valleys — a ghost hunt.",
+    localities: ["Wamena"],
     traitLean: ["blueStripe", "highWhite"],
   },
   {
-    id: "southern",
-    name: "Southern Wilds",
-    tagline: "Trans-Fly lowlands and the Aru Isles — true Morelia viridis country.",
-    localities: ["Aru", "Merauke"],
+    id: "jayapura",
+    name: "Jayapura Coast",
+    tagline: "North coast lowlands near the Cyclops range.",
+    localities: ["Jayapura"],
+    traitLean: ["blueStripe", "highWhite"],
+  },
+  {
+    id: "cyclops",
+    name: "Cyclops Range",
+    tagline: "Moss forest in the Cyclops mountains.",
+    localities: ["Cyclops"],
+    traitLean: ["blueStripe", "highWhite"],
+  },
+  {
+    id: "lereh",
+    name: "Lereh Lowlands",
+    tagline: "Northern lowland forest.",
+    localities: ["Lereh"],
+    traitLean: ["blueStripe", "highWhite"],
+  },
+  {
+    id: "aru",
+    name: "Aru Isles",
+    tagline: "True Morelia viridis country.",
+    localities: ["Aru"],
+    traitLean: ["highWhite", "highBlack"],
+  },
+  {
+    id: "merauke",
+    name: "Merauke Lowlands",
+    tagline: "Trans-Fly lowlands — southern viridis.",
+    localities: ["Merauke"],
     traitLean: ["highWhite", "highBlack"],
   },
 ];
 
-/** Roll which region tonight's expedition heads to. */
+/**
+ * Rarity weights for region selection. Higher = more likely to visit.
+ * Legendary localities (Yapen, Arfak, Timika, Kofiau, Wamena) are rare visits.
+ */
+const REGION_RARITY_WEIGHTS: Record<string, number> = {
+  biak: 10,      // common
+  sorong: 10,    // common
+  jayapura: 10,  // common
+  aru: 10,       // common
+  numfor: 6,     // uncommon
+  manokwari: 6,  // uncommon
+  cyclops: 6,    // uncommon
+  lereh: 6,      // uncommon
+  merauke: 3,    // rare
+  yapen: 1,      // legendary
+  arfak: 1,      // legendary
+  timika: 1,     // legendary
+  kofiau: 1,     // legendary
+  wamena: 1,     // legendary
+};
+
+/** Roll which region tonight's expedition heads to, weighted by rarity. */
 export function rollRegion(random: RandomFn = Math.random): CanopyRegion {
-  return CANOPY_REGIONS[Math.floor(random() * CANOPY_REGIONS.length)];
+  const totalWeight = CANOPY_REGIONS.reduce(
+    (sum, r) => sum + (REGION_RARITY_WEIGHTS[r.id] ?? 1),
+    0
+  );
+  let roll = random() * totalWeight;
+  for (const region of CANOPY_REGIONS) {
+    roll -= REGION_RARITY_WEIGHTS[region.id] ?? 1;
+    if (roll <= 0) return region;
+  }
+  return CANOPY_REGIONS[0];
 }
 
 /* ------------------------------------------------------------------ */
