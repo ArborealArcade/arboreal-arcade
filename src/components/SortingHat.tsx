@@ -39,13 +39,14 @@ export function SortingHat({
       : size === "lg"
         ? "h-28 w-28"
         : "h-20 w-20";
-  // Swap the sprite for the sad mood only: the sad sprite has a half-closed
-  // eye and drooping brim. Happy/celebrate use the base sprite with CSS
-  // motion (brim tip, bounce).
+  // Swap sprites by mood: sad has the half-closed droopy eye; happy has the
+  // gleeful shut eye with the smile-curled brim. Base sprite for the rest.
   const moodAsset =
     mood === "sad"
       ? asset.replace("sorting-hat-v2.webp", "sorting-hat-sad.webp")
-      : asset;
+      : mood === "happy" || mood === "celebrate"
+        ? asset.replace("sorting-hat-v2.webp", "sorting-hat-happy.webp")
+        : asset;
   return (
     <>
       <style>{`
