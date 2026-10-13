@@ -114,6 +114,17 @@ export function CoilTable() {
   const [table, setTable] = useState<TableState | null>(null);
   const [roundId, setRoundId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+  function takeBusy() {
+    if (busyRef.current) return false;
+    busyRef.current = true;
+    setBusy(true);
+    return true;
+  }
+  function releaseBusy() {
+    busyRef.current = false;
+    setBusy(false);
+  }
   const [error, setError] = useState<string | null>(null);
   const [talk, setTalk] = useState<{ name: string; text: string } | null>(null);
   const [raiseTo, setRaiseTo] = useState(0);
@@ -126,7 +137,7 @@ export function CoilTable() {
   }, []);
 
   const startSession = useCallback(async () => {
-    setBusy(true);
+    if (!takeBusy()) return;
     setError(null);
     try {
       unlockAudio();
@@ -142,7 +153,7 @@ export function CoilTable() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not buy in.");
     } finally {
-      setBusy(false);
+      releaseBusy();
     }
   }, [placeBet, say]);
 
@@ -217,8 +228,7 @@ export function CoilTable() {
   }, [table, roundId, rebuy, say]);
 
   const cashOut = useCallback(async () => {
-    if (!table || !roundId) return;
-    setBusy(true);
+    if (!table || !roundId || !takeBusy()) return;
     setError(null);
     try {
       const heroStack = table.seats[0].stack;
@@ -232,7 +242,7 @@ export function CoilTable() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not cash out.");
     } finally {
-      setBusy(false);
+      releaseBusy();
     }
   }, [table, roundId, settleBet]);
 

@@ -493,13 +493,13 @@ export function SnakeSorting() {
   };
 
   /* Round One: the neonate-color wager, before a single probe is spent.
-     Skipped only when the photo visibly shows a neonate — the color is
-     right there, so there is no wager to make. Every house, Viridis
-     included, faces the wager on adult photos. */
+     Skipped when the photo visibly shows a neonate — the color is right
+     there — and for House Viridis, which hatches only yellow (no wager
+     to make; offering it would be risk-free points). */
   const enterNeonate = (s: SortingSnake) => {
-    if (s.isNeonate) {
+    if (s.isNeonate || s.house === "viridis") {
       setNeonateState("skipped");
-      setHatLine(pick(HAT_LINES.neonateVisible));
+      setHatLine(pick(s.house === "viridis" ? HAT_LINES.neonateViridis : HAT_LINES.neonateVisible));
       synth.tick();
       later(1700, enterScan);
       return;
@@ -652,7 +652,7 @@ export function SnakeSorting() {
   };
 
   const beginSort = () => {
-    if (phase !== "scan") return;
+    if (phase !== "scan" || probing) return;
     // Early-call bonus: +25 per probe left unrevealed. Deep Scan forfeits it.
     const bonus = deepUsed ? 0 : (3 - probed.length) * EARLY_BONUS_PER_PROBE;
     setEarlyBonus(bonus);
@@ -1052,7 +1052,8 @@ export function SnakeSorting() {
                       <button
                           type="button"
                           onClick={beginSort}
-                          className="ss-pop flex-1 rounded-2xl bg-gradient-to-b from-amber-300 to-amber-500 px-3 py-2.5 text-[13px] font-black uppercase tracking-wider text-black shadow-[0_0_24px_rgba(251,191,36,.35)] transition active:scale-95"
+                          disabled={!!probing}
+                          className="ss-pop flex-1 rounded-2xl bg-gradient-to-b from-amber-300 to-amber-500 px-3 py-2.5 text-[13px] font-black uppercase tracking-wider text-black shadow-[0_0_24px_rgba(251,191,36,.35)] transition active:scale-95 disabled:opacity-50"
                         >
                           {deepUsed || probed.length >= 3
                             ? "Begin the sorting →"
@@ -1456,12 +1457,12 @@ function TitleScreen({
             href="/arboreals-by-bunn"
             className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[.03] p-3 transition hover:border-amber-200/40"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/abb-site/assets/abb-logo-masthead.jpg"
-              alt="Arboreals By Bunn"
-              className="h-12 w-20 shrink-0 rounded-lg object-contain"
-            />
+            <span
+              aria-hidden
+              className="flex h-12 w-20 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400/30 to-orange-600/30 text-[15px] font-black tracking-wide text-amber-100"
+            >
+              ABB
+            </span>
             <span>
               <span className="block text-[13.5px] font-bold text-white">Arboreals by Bunn</span>
               <span className="block text-[12px] text-white/55">Specimen photography →</span>
@@ -1474,11 +1475,12 @@ function TitleScreen({
             className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[.03] p-3 transition hover:border-amber-200/40"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/sellers/elleman-family-reptiles.webp"
-              alt="Elleman Family Reptiles"
-              className="h-12 w-20 shrink-0 rounded-lg object-cover"
-            />
+            <span
+              aria-hidden
+              className="flex h-12 w-20 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-lime-400/30 to-green-600/30 text-[13px] font-black tracking-wide text-lime-100"
+            >
+              EFR
+            </span>
             <span>
               <span className="block text-[13.5px] font-bold text-white">Elleman Family Reptiles</span>
               <span className="block text-[12px] text-white/55">Specimen photography · MorphMarket store ↗</span>

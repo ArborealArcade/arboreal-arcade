@@ -32,6 +32,17 @@ export function BlackjackTable() {
   const [table, setTable] = useState<BJTableState | null>(null);
   const [roundId, setRoundId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+  function takeBusy() {
+    if (busyRef.current) return false;
+    busyRef.current = true;
+    setBusy(true);
+    return true;
+  }
+  function releaseBusy() {
+    busyRef.current = false;
+    setBusy(false);
+  }
   const [error, setError] = useState<string | null>(null);
   const riskedRef = useRef(0);
   const openingBetRef = useRef(0);
@@ -60,8 +71,7 @@ export function BlackjackTable() {
   );
 
   const deal = useCallback(async () => {
-    if (busy) return;
-    setBusy(true);
+    if (!takeBusy()) return;
     setError(null);
     try {
       unlockAudio();
@@ -86,14 +96,13 @@ export function BlackjackTable() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not deal.");
     } finally {
-      setBusy(false);
+      releaseBusy();
     }
-  }, [busy, bet, placeBet, settleTable, shoe]);
+  }, [bet, placeBet, settleTable, shoe]);
 
   const act = useCallback(
     async (action: string) => {
-      if (!table || busy || !roundId) return;
-      setBusy(true);
+      if (!table || !roundId || !takeBusy()) return;
       setError(null);
       try {
         unlockAudio();
@@ -123,10 +132,10 @@ export function BlackjackTable() {
       } catch (e) {
         setError(e instanceof Error ? e.message : "Illegal action.");
       } finally {
-        setBusy(false);
+        releaseBusy();
       }
     },
-    [table, busy, roundId, bet, settleTable]
+    [table, roundId, bet, settleTable]
   );
 
   const newRound = () => {

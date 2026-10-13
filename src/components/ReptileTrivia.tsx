@@ -74,23 +74,25 @@ export function ReptileTrivia() {
   useEffect(() => {
     if (phase !== "question") return;
     timerRef.current = setInterval(() => {
-      setSecondsLeft((s) => {
-        if (s <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          // Time out: reveal as a miss.
-          setPicked(-1);
-          setStreak(0);
-          setGained(0);
-          setPhase("reveal");
-          return 0;
-        }
-        return s - 1;
-      });
+      // Read current seconds without side effects in the updater.
+      setSecondsLeft((s) => (s <= 1 ? 0 : s - 1));
     }, 1000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [phase, qi]);
+
+  // Timeout side effects live here, not inside the state updater (updaters
+  // must stay pure — StrictMode double-invokes them).
+  useEffect(() => {
+    if (phase === "question" && secondsLeft <= 0) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      setPicked(-1);
+      setStreak(0);
+      setGained(0);
+      setPhase("reveal");
+    }
+  }, [phase, secondsLeft]);
 
   function start() {
     awardedRef.current = false;
@@ -115,6 +117,23 @@ export function ReptileTrivia() {
     setPhase("intro");
   }
 
+  // Keyboard answers: 1–4 or A–D. Big win in a 15-second timed game.
+  useEffect(() => {
+    if (phase !== "question") return;
+    const onKey = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      const idx = ["1", "2", "3", "4"].indexOf(k) !== -1
+        ? ["1", "2", "3", "4"].indexOf(k)
+        : ["a", "b", "c", "d"].indexOf(k);
+      if (idx >= 0) {
+        e.preventDefault();
+        pick(idx);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [phase, qi]);
+
   function pick(i: number) {
     if (phase !== "question" || !q || eliminated.includes(i)) return;
     if (timerRef.current) clearInterval(timerRef.current);
@@ -137,8 +156,13 @@ export function ReptileTrivia() {
 
   function fiftyFifty() {
     if (phase !== "question" || fiftyUsed || !q) return;
-    const wrong = [0, 1, 2, 3].filter((i) => i !== q.answer).slice(0, 2);
-    setEliminated(wrong);
+    // Shuffle the wrong answers so the lifeline isn't predictable.
+    const wrong = [0, 1, 2, 3].filter((i) => i !== q.answer);
+    for (let i = wrong.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [wrong[i], wrong[j]] = [wrong[j], wrong[i]];
+    }
+    setEliminated(wrong.slice(0, 2));
     setFiftyUsed(true);
   }
 
@@ -276,7 +300,7 @@ export function ReptileTrivia() {
             )}
           </div>
 
-          <div className="mt-3 flex items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className={`rounded-full border px-3 py-1 text-[11px] font-bold ${CATEGORY_STYLES[q.category]}`}>
               {q.category}
             </span>

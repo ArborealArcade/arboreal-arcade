@@ -317,7 +317,12 @@ export function ChondroAnimalRecordActions({ animalId, initialName, initialNotes
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Listing failed");
-      window.dispatchEvent(new Event("arboreal-chondro-breeder-save-change"));
+      // The market API mutates the server save. Reload it and persist locally
+      // so the core game adopts the listing instead of its unmount flush
+      // reverting it with stale in-memory state.
+      const { state, authenticated } = await loadSave();
+      if (state) await persistSave(state, authenticated);
+      else window.dispatchEvent(new Event("arboreal-chondro-breeder-save-change"));
       setStatus(`Listed for $${Math.round(listingPrice).toLocaleString()}. The 48-hour fallback applies if it remains unsold.`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "The animal could not be listed.");

@@ -37,6 +37,17 @@ export async function claimMarketProceeds(
     setMarket((previous) => ({ ...previous, pendingProceeds: 0, pendingSaleCount: 0 }));
     setClaimMessage(`Claimed ${claimed} — added to your game cash.`);
     playHankScaleLine(24);
+    // The claim mutates the server save (adds cash). Pull the fresh save and
+    // stamp it locally so the core game's unmount flush doesn't revert the
+    // claimed proceeds with stale in-memory state.
+    try {
+      const saveRes = await fetch("/api/hatchery/chondro-breeder/save", { cache: "no-store" });
+      const saveData = await saveRes.json();
+      if (saveData.save?.state && typeof saveData.save.state === "object") {
+        const stamped = { ...saveData.save.state, updatedAt: Date.now() };
+        try { window.localStorage.setItem("arboreal_chondro_breeder_v2", JSON.stringify(stamped)); } catch {}
+      }
+    } catch {}
     window.dispatchEvent(new Event("arboreal-chondro-breeder-save-change"));
   } catch {
     setClaimMessage("Could not claim sales right now — try again.");

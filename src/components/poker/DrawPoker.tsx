@@ -29,6 +29,19 @@ export function DrawPoker() {
   const [holds, setHolds] = useState<boolean[]>([false, false, false, false, false]);
   const [roundId, setRoundId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Synchronous guard: state updates don't commit between rapid taps,
+  // so a ref is the only thing that stops double-fire currency bugs.
+  const busyRef = useRef(false);
+  function takeBusy() {
+    if (busyRef.current) return false;
+    busyRef.current = true;
+    setBusy(true);
+    return true;
+  }
+  function releaseBusy() {
+    busyRef.current = false;
+    setBusy(false);
+  }
   const [error, setError] = useState<string | null>(null);
   const [winCoins, setWinCoins] = useState(0);
   const [winLabel, setWinLabel] = useState("");
@@ -39,8 +52,7 @@ export function DrawPoker() {
   const [collected, setCollected] = useState(0);
 
   const deal = useCallback(async () => {
-    if (busy) return;
-    setBusy(true);
+    if (!takeBusy()) return;
     setError(null);
     try {
       unlockAudio();
@@ -62,12 +74,12 @@ export function DrawPoker() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not deal.");
     } finally {
-      setBusy(false);
+      releaseBusy();
     }
-  }, [busy, coins, placeBet]);
+  }, [coins, placeBet]);
 
   const draw = useCallback(() => {
-    if (phase !== "hold" || busy) return;
+    if (phase !== "hold" || !takeBusy()) return;
     unlockAudio();
     const stub = stubRef.current;
     const replaced = holds.filter((x) => !x).length;
@@ -86,11 +98,11 @@ export function DrawPoker() {
       setCollected(0);
       playSfx("lose");
     }
-  }, [phase, busy, hand, holds, coins]);
+    releaseBusy();
+  }, [phase, hand, holds, coins]);
 
   const collect = useCallback(async () => {
-    if (!roundId || busy) return;
-    setBusy(true);
+    if (!roundId || !takeBusy()) return;
     setError(null);
     try {
       const payout = winCoins * DENOM;
@@ -103,12 +115,12 @@ export function DrawPoker() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not settle.");
     } finally {
-      setBusy(false);
+      releaseBusy();
     }
-  }, [roundId, busy, winCoins, coins, settleBet]);
+  }, [roundId, winCoins, coins, settleBet]);
 
   const gamble = useCallback(() => {
-    if (phase !== "gamble" || busy || gambles >= MAX_GAMBLES) return;
+    if (phase !== "gamble" || !takeBusy() || gambles >= MAX_GAMBLES) return;
     unlockAudio();
     const stub = stubRef.current;
     if (stub.length < 2) {
@@ -133,21 +145,21 @@ export function DrawPoker() {
       setGambleMsg(`Dealer ${label(dealer)} beats your ${label(player)}. Gamble lost.`);
       playSfx("lose");
     }
-  }, [phase, busy, gambles, winCoins, collect]);
+    releaseBusy();
+  }, [phase, gambles, winCoins, collect]);
 
   // Auto-settle a losing hand right after the draw.
   const settleLoss = useCallback(async () => {
-    if (!roundId || busy) return;
-    setBusy(true);
+    if (!roundId || !takeBusy()) return;
     try {
       await settleBet(roundId, 0, { risked: coins * DENOM, bet: coins * DENOM });
       setRoundId(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not settle.");
     } finally {
-      setBusy(false);
+      releaseBusy();
     }
-  }, [roundId, busy, coins, settleBet]);
+  }, [roundId, coins, settleBet]);
 
   const newRound = () => {
     setPhase("betting");

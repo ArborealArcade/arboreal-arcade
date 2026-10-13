@@ -1622,14 +1622,19 @@ export function ChondroBreederGameV3({ screen = "all" }: { screen?: BreederGameS
 
   /**
    * Intro cinematic completion (end, CTA, or skip). The $30,000 credit grant
-   * is idempotent: it only tops cash up to STARTING_CASH, and the
-   * cinematicSeen flag guarantees it never runs twice — skipping never
-   * forfeits the credit, and replaying never re-grants it.
+   * is idempotent and exploit-proof: it only tops cash up to STARTING_CASH
+   * when the player hasn't spent anything yet. Players who shopped
+   * pre-cinematic already used their starting credit — no free top-up.
+   * The cinematicSeen flag guarantees it never runs twice.
    */
   function handleFirstCinematicDone() {
     setCinematicSeen(true);
     writeCinematicSeenMirror();
-    setCash((value) => Math.max(value, STARTING_CASH));
+    // Only grant the starting credit if nothing was purchased pre-cinematic.
+    // Otherwise the top-up would refund pre-cinematic spending (free money).
+    if (purchasedStoreIds.length === 0) {
+      setCash((value) => Math.max(value, STARTING_CASH));
+    }
     setStarted(true);
   }
 
@@ -1958,6 +1963,9 @@ export function ChondroBreederGameV3({ screen = "all" }: { screen?: BreederGameS
     setExpeditionEntered(false);
     setExpeditionFeeArmed(false);
     setExpeditionResult(null);
+    // Clear the ref too — otherwise the unmount/pagehide flush writes the
+    // old save back and resurrects the "deleted" game.
+    latestSaveRef.current = null;
     try {
       window.localStorage.removeItem(LOCAL_SAVE_KEY);
     } catch {}

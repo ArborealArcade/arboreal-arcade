@@ -639,6 +639,10 @@ export const HAT_LINES = {
     "A babe on the dais — its first color is right there before your eyes. No wager on this one, keeper; straight to the probes.",
     "The neonate sits before you, plain as day. No points for calling what you can see — on to the probes.",
   ],
+  neonateViridis: [
+    "A Viridis serpent — they hatch yellow, every one. No wager on a foregone conclusion; on to the probes.",
+    "House Viridis knows only yellow at hatching. No free points here, keeper — earn your score on the probes.",
+  ],
   probeDone: [
     "Noted... noted. What else shall we examine?",
     "Mmm, interesting. Probe deeper, keeper.",

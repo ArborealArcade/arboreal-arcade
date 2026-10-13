@@ -472,7 +472,7 @@ export function reportArcadeEvent(e: ArcadeEvent): string[] {
       trackPlay("sorting");
       give("first-sort");
       if (e.score >= 1000) give("hat-sharp");
-      if (/chondro master/i.test(e.rank)) give("chondro-master");
+      if (/sorting master/i.test(e.rank)) give("chondro-master");
       bumpQuest("q-sort-800", e.mode === "ceremony" && e.score >= 800 ? 1 : 0);
       break;
     case "pile-complete":

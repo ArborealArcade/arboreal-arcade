@@ -1431,9 +1431,9 @@ export function CanopyHunter({
                     className={`group relative aspect-[3/4] transition active:scale-95 ${
                       isTree
                         ? i === 1
-                          ? "w-24 -translate-y-3 sm:w-32"
-                          : "w-32 sm:w-44"
-                        : "w-20 sm:w-28"
+                          ? "w-20 -translate-y-3 sm:w-32"
+                          : "w-24 sm:w-44"
+                        : "w-16 sm:w-28"
                     } ${wasSearched ? "" : "hover:drop-shadow-[0_0_20px_rgba(52,211,153,.35)]"}`}
                   >
                     <div className={`absolute inset-0 transition-opacity duration-500 ${wasSearched && !showPython ? "opacity-60" : ""}`}>
