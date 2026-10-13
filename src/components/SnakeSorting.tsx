@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import SnakePileSort from "./SnakePileSort";
+import { SortingHat, type HatMood } from "./SortingHat";
 import {
   BEST_CEREMONY_KEY,
   BEST_ENDLESS_KEY,
@@ -415,6 +416,7 @@ export function SnakeSorting() {
      "skipped" for House Viridis, which hatches only yellow. */
   const [neonateState, setNeonateState] = useState<"pending" | "correct" | "wrong" | "skipped">("pending");
   const [hatLine, setHatLine] = useState(HAT_LINES.greetings[0]);
+  const [hatMood, setHatMood] = useState<HatMood>("idle");
   const [isNewBest, setIsNewBest] = useState(false);
   const [bestCeremony, setBestCeremony] = useBestScore(BEST_CEREMONY_KEY);
   const [bestEndless, setBestEndless] = useBestScore(BEST_ENDLESS_KEY);
@@ -523,6 +525,7 @@ export function SnakeSorting() {
       setHatLine(
         fillTemplate(pick(HAT_LINES.neonateCorrect), { actual: snake.neonate }),
       );
+      setHatMood("happy");
       synth.chime();
       buzz(20);
     } else {
@@ -532,6 +535,7 @@ export function SnakeSorting() {
           actual: snake.neonate,
         }),
       );
+      setHatMood("sad");
       synth.buzz();
     }
     later(1700, enterScan);
@@ -540,6 +544,7 @@ export function SnakeSorting() {
   const enterScan = () => {
     setPhase("scan");
     setHatLine(pick(HAT_LINES.scanIntro));
+    setHatMood("thinking");
   };
 
   const startGame = (m: Mode) => {
@@ -564,6 +569,7 @@ export function SnakeSorting() {
     resetSnakeState();
     setPhase("arrive");
     setHatLine(pick(HAT_LINES.arrive));
+    setHatMood("idle");
     synth.tick();
     later(1700, () => enterNeonate(newOrder[0]));
   };
@@ -714,6 +720,7 @@ export function SnakeSorting() {
       setLocalitiesOffered((c) => c + 1);
       setLocalityOptions(shuffle(HOUSE_BY_ID[snake.house].localities));
       setHatLine(`${HAT_LINES.correctHouse[snake.house]}`);
+      setHatMood("happy");
       synth.slam();
       buzz(25);
       later(500, synth.chime);
@@ -723,6 +730,7 @@ export function SnakeSorting() {
     } else {
       setStreak(0);
       setHouseWasCorrect(false);
+      setHatMood("sad");
       setHatLine(
         fillTemplate(pick(HAT_LINES.wrongHouse), {
           picked: HOUSE_BY_ID[id].name,
@@ -959,12 +967,7 @@ export function SnakeSorting() {
 
               {/* hat dialogue */}
               <div className="mt-3 flex items-start gap-2.5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`${ASSET}/sorting-hat-v2.webp`}
-                  alt="The Sorting Hat"
-                  className="ss-float h-14 w-14 shrink-0 rounded-full border border-amber-200/30 object-cover shadow-[0_0_18px_rgba(251,191,36,.25)]"
-                />
+                <SortingHat mood={hatMood} size="sm" asset={`${ASSET}/sorting-hat-v2.webp`} />
                 <HatBubble key={hatLine} line={hatLine} />
               </div>
 
@@ -1554,11 +1557,13 @@ function ResultsScreen({
         The Headmaster&apos;s verdict
       </p>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={`${ASSET}/sorting-hat-v2.webp`}
-        alt="The Sorting Hat"
-        className="ss-float mt-3 h-20 w-20 rounded-full border border-amber-200/30 object-cover shadow-[0_0_30px_rgba(251,191,36,.3)]"
-      />
+      <div className="mt-3">
+        <SortingHat
+          mood={rank.title === "Sorting Master" ? "celebrate" : rank.title === "Hatchling" ? "sad" : "happy"}
+          size="md"
+          asset={`${ASSET}/sorting-hat-v2.webp`}
+        />
+      </div>
       <h2 className="mt-3 font-serif text-4xl font-black text-amber-50">{rank.title}</h2>
       <p className="mt-1 text-[13px] italic text-white/55">{rank.blurb}</p>
       {nextRank && (
@@ -1657,12 +1662,7 @@ function ResultsScreen({
       )}
 
       <div className="mt-3 flex w-full items-start gap-2.5 text-left">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={`${ASSET}/sorting-hat-v2.webp`}
-          alt=""
-          className="h-12 w-12 shrink-0 rounded-full border border-amber-200/30 object-cover"
-        />
+        <SortingHat mood="idle" size="sm" asset={`${ASSET}/sorting-hat-v2.webp`} />
         <div className="flex-1 rounded-2xl rounded-tl-md border border-amber-100/15 bg-black/60 px-3.5 py-2.5 backdrop-blur-sm">
           <p className="text-[13px] leading-snug text-amber-50/95">{hatLine}</p>
         </div>
