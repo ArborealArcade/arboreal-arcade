@@ -207,6 +207,9 @@ export function StakesClient() {
 
   useEffect(() => {
     if (!activeId) return;
+    // Stop polling once the wager reaches a terminal state — no point
+    // hitting the server every 6s for a finished game.
+    if (session && TERMINAL_SESSION_STATES.includes(session.session_state)) return;
     let cancelled = false;
     const tick = () => {
       if (!cancelled && !busyRef.current) void loadSession(activeId);
@@ -218,7 +221,7 @@ export function StakesClient() {
       clearTimeout(first);
       clearInterval(t);
     };
-  }, [activeId, loadSession]);
+  }, [activeId, loadSession, session?.session_state]);
 
   const deal = useCallback(async () => {
     if (!activeId || busy) return;

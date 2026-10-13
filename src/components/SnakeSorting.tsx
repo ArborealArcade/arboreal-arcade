@@ -270,15 +270,19 @@ function PhotoPlate({
   reducedMotion: boolean;
   neonateHidden: boolean;
 }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  // Reset the error flag when the snake changes.
+  useEffect(() => { setImgFailed(false); }, [snake.id]);
   return (
     <>
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/10 bg-black/70 shadow-[0_0_60px_rgba(45,212,191,.12)]">
-        {snake.photo ? (
+        {snake.photo && !imgFailed ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={snake.photo}
             alt="Serpent on the dais"
             className="h-full w-full object-cover"
+            onError={() => setImgFailed(true)}
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[radial-gradient(ellipse_at_center,rgba(45,212,191,.08),transparent_70%)] px-6 text-center">

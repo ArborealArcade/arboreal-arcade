@@ -23,10 +23,14 @@ import { playSfx, unlockAudio } from "@/lib/poker/sfx";
 
 const BUY_IN = 500;
 
-/** Deal the next hand on an existing table, keeping stacks and rotating the button. */
+/** Deal the next hand on an existing table, keeping stacks and rotating the button.
+ * Busted AI seats rebuy to a fresh stack so the table never empties out —
+ * otherwise the hero ends up playing alone, posting blinds to themselves. */
 function dealNextHand(prev: TableState): TableState {
-  const seats = prev.seats.map((s) => ({
+  const seats = prev.seats.map((s, i) => ({
     ...s,
+    // Seat 0 is the hero; AI seats (1-5) rebuy when busted.
+    stack: s.stack === 0 && i > 0 ? BUY_IN : s.stack,
     bet: 0,
     hole: [],
     folded: false,

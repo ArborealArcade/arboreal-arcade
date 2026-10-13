@@ -180,16 +180,14 @@ export function ChondroAnimalRecordActions({ animalId, initialName, initialNotes
 
       const nextStage = String(requirement.next);
       if (nextStage === "Adult") {
-        const dojoCapacity = Math.max(0, Number(state.enclosures?.["Chondro Dojo Bin"] ?? 0) || 0) * 2;
-        const pvcCapacity = Math.max(0, Number(state.enclosures?.["PVC Arboreal"] ?? 0) || 0);
-        const otherAnimals = state.colony.filter((item) => String(item.id ?? "") !== animalId);
-        const olderAnimals = otherAnimals.filter((item) => item.lifeStage === "Adult").length;
-        const juveniles = Math.max(0, otherAnimals.length - olderAnimals);
-        const juvenileOverflowIntoPvc = Math.max(0, juveniles - dojoCapacity);
-        const requiredPvc = olderAnimals + juvenileOverflowIntoPvc;
-
-        if (pvcCapacity <= requiredPvc) {
-          setStatus("An open PVC Arboreal Enclosure is required before this animal can be raised to adult.");
+        // Per the owner-confirmed housing rule, chondros of ANY life stage can
+        // live in a Chondro Dojo Bin — adults do NOT require a PVC enclosure.
+        // The animal is already housed; raising it doesn't need a new slot,
+        // just valid housing for an adult (any Dojo or PVC counts).
+        const { animalHousingCapacity } = await import("@/lib/chondro-facility-limits");
+        const totalCapacity = animalHousingCapacity(state.enclosures);
+        if (totalCapacity < state.colony.length) {
+          setStatus("No open housing — add a Chondro Dojo Bin or PVC Arboreal Enclosure before raising this animal to adult.");
           return;
         }
       }

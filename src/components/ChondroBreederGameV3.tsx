@@ -2425,7 +2425,7 @@ export function ChondroBreederGameV3({ screen = "all" }: { screen?: BreederGameS
                         <button
                           key={sub}
                           type="button"
-                          disabled={recovering || openSlots < PERMIT_GROVES || (payWithTokens ? tokenBal < TOKEN_PERMIT : cash < EXPEDITION_PERMIT_FEE)}
+                          disabled={recovering || openSlots < PERMIT_GROVES * PYTHONS_PER_GROVE || (payWithTokens ? tokenBal < TOKEN_PERMIT : cash < EXPEDITION_PERMIT_FEE)}
                           onClick={() => enterExpeditionPermit(sub)}
                           className={`rounded-xl border px-4 py-3 text-left transition active:scale-[.99] disabled:opacity-40 ${
                             selected

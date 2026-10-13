@@ -15,6 +15,7 @@ export interface CollectionSnake {
 const GTP_STAGE: Record<string, CollectionSnake["lifeStage"]> = {
   Hatchling: "neonate",
   Neonate: "neonate",
+  Juvenile: "juvenile",
   Subadult: "subadult",
   Adult: "adult",
 };
