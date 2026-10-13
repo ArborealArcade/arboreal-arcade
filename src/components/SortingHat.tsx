@@ -39,6 +39,15 @@ export function SortingHat({
       : size === "lg"
         ? "h-28 w-28"
         : "h-20 w-20";
+  // Swap the sprite for expressive moods: the sad sprite has a half-closed
+  // eye and drooping brim; the happy sprite has a closed-eye smile and
+  // brim ends tilted up like a grin.
+  const moodAsset =
+    mood === "sad"
+      ? asset.replace("sorting-hat-v2.webp", "sorting-hat-sad.webp")
+      : mood === "happy" || mood === "celebrate"
+        ? asset.replace("sorting-hat-v2.webp", "sorting-hat-happy.webp")
+        : asset;
   return (
     <>
       <style>{`
@@ -48,13 +57,12 @@ export function SortingHat({
 }
 @keyframes hat-happy {
   0%, 100% { transform: rotate(0deg) translateY(0); }
-  30% { transform: rotate(-14deg) translateY(-10px); }
-  60% { transform: rotate(8deg) translateY(-2px); }
+  30% { transform: rotate(-8deg) translateY(-8px); }
+  60% { transform: rotate(6deg) translateY(-2px); }
 }
 @keyframes hat-sad {
-  0% { transform: rotate(0deg) translateY(0) scaleY(1); }
-  40% { transform: rotate(6deg) translateY(8px) scaleY(0.88); }
-  100% { transform: rotate(3deg) translateY(4px) scaleY(0.94); }
+  0% { transform: rotate(0deg) translateY(0); }
+  100% { transform: rotate(4deg) translateY(6px); }
 }
 @keyframes hat-thinking {
   0%, 100% { transform: rotate(-8deg) translateY(0); }
@@ -69,7 +77,7 @@ export function SortingHat({
       `}</style>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={asset}
+        src={moodAsset}
         alt={MOOD_LABEL[mood]}
         className={`${sizeClass} shrink-0 rounded-full border border-amber-200/30 object-cover shadow-[0_0_30px_rgba(251,191,36,.3)]`}
         style={{ animation: MOOD_ANIMATION[mood] }}
