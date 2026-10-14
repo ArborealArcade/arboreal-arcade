@@ -15,6 +15,23 @@ export function ArborealKeeperWorkspace() {
     };
   }, []);
 
+  // Lock the game view on touch devices: no pinch-zoom, no panning.
+  // (Viewport meta handles most browsers; this catches iOS Safari gestures.)
+  useEffect(() => {
+    const preventPinch = (e: TouchEvent) => {
+      if (e.touches.length > 1) e.preventDefault();
+    };
+    const preventGesture = (e: Event) => e.preventDefault();
+    document.addEventListener("touchmove", preventPinch, { passive: false });
+    document.addEventListener("gesturestart", preventGesture);
+    document.addEventListener("gesturechange", preventGesture);
+    return () => {
+      document.removeEventListener("touchmove", preventPinch);
+      document.removeEventListener("gesturestart", preventGesture);
+      document.removeEventListener("gesturechange", preventGesture);
+    };
+  }, []);
+
   return (
     <>
       <ArborealKeeperEmeraldCloudSync />
