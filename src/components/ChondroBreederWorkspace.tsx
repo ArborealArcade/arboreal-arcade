@@ -26,11 +26,12 @@ import { ChondroBreederScreenArt } from "@/components/ChondroBreederScreenArt";
 import { ChondroCollectionManager } from "@/components/ChondroCollectionManager";
 import { ChondroActiveClutchShowcase } from "@/components/ChondroActiveClutchShowcase";
 import { ChondroColonyOverview } from "@/components/ChondroColonyOverview";
+import { ArborealKeeperExpo } from "@/components/ArborealKeeperExpo";
 import { requestExpeditionOpen, EXPEDITION_FREE_COOLDOWN_MS, EXPEDITION_PYTHONS } from "@/lib/canopy-hunter";
 import { CanopyHunterSlideshow } from "@/components/arcade/CanopyHunterSlideshow";
 import { animalHousingCapacity } from "@/lib/chondro-facility-limits";
 
-type WorkspaceView = "home" | "breeding" | "colony" | "clutches" | "market" | "career" | "projects" | "conservation" | "community" | "guide";
+type WorkspaceView = "home" | "breeding" | "colony" | "clutches" | "market" | "career" | "projects" | "conservation" | "community" | "guide" | "expo";
 
 /** Seven-day window in ms — derived from the expedition free-cooldown so the
  * Home card stays in sync with the entry model in src/lib/canopy-hunter.ts. */
@@ -93,6 +94,7 @@ const views: Array<{ id: WorkspaceView } & ViewMeta> = [
   { id: "conservation", label: "Conservation", detail: "Regional conservation program", icon: "⌁" },
   { id: "community", label: "Network", detail: "Breeder community and activity", icon: "◌" },
   { id: "guide", label: "Field Guide", detail: "Subspecies, locality and phenotype reference", icon: "?" },
+  { id: "expo", label: "Expo Hall", detail: "Walkable weekend reptile expo", icon: "🎪" },
 ];
 
 const dockViews = ["home", "breeding", "colony", "clutches", "market"] as const;
@@ -223,6 +225,7 @@ export function ChondroBreederWorkspace() {
         {view === "conservation" ? <SecondaryScreen active={active} onBack={() => openView("home")}><ChondroConservationPartnerships /></SecondaryScreen> : null}
         {view === "community" ? <SecondaryScreen active={active} onBack={() => openView("home")}><ChondroBreederManagementView section="community" /></SecondaryScreen> : null}
         {view === "guide" ? <SecondaryScreen active={active} onBack={() => openView("home")}><ChondroBreederSubspeciesPhenotypes /></SecondaryScreen> : null}
+        {view === "expo" ? <ArborealKeeperExpo onBack={() => openView("home")} /> : null}
       </main>
 
       <ChondroGameNotifications />
@@ -329,6 +332,25 @@ function BreederHome({ onOpen }: { onOpen: (view: WorkspaceView) => void }) {
               <CanopyHunterSlideshow onPlay={openExpedition} />
             </div>
           ) : null}
+
+          {/* Weekend Expo event card */}
+          <button
+            type="button"
+            onClick={() => onOpen("expo")}
+            className="group mt-4 block w-full overflow-hidden rounded-[26px] border border-fuchsia-300/15 bg-gradient-to-br from-fuchsia-950/60 via-[#0a0f0d] to-[#0a0f0d] p-5 text-left transition hover:-translate-y-0.5 hover:border-fuchsia-300/30"
+          >
+            <div className="flex items-center gap-4">
+              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-fuchsia-400/15 text-3xl">🎪</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[9px] font-black uppercase tracking-[.18em] text-fuchsia-200/60">Weekend event</span>
+                <span className="mt-1 block text-lg font-bold text-white">Reptile Expo Hall</span>
+                <span className="mt-0.5 block text-xs leading-5 text-white/45">
+                  Walk the floor, haggle with vendors, catch the auction, and check the arcade cabinet in the corner.
+                </span>
+              </span>
+              <span className="shrink-0 text-2xl text-white/30 transition group-hover:translate-x-1 group-hover:text-white/60">→</span>
+            </div>
+          </button>
 
           <section className="mt-4 overflow-hidden rounded-[30px] border border-emerald-300/12 bg-[#030806] shadow-[0_24px_70px_rgba(0,0,0,.28)]">
             <div className="grid lg:grid-cols-[minmax(330px,46%)_1fr]">

@@ -2311,14 +2311,14 @@ export function ChondroBreederGameV3({ screen = "all" }: { screen?: BreederGameS
           catches are never partially imported or dropped. */}
       {expeditionOpen ? (
         <div role="dialog" aria-modal="true" aria-label="Canopy Hunter expedition" onClick={(event) => { if (event.target === event.currentTarget && !expeditionEntered) closeExpedition(); }} className="fixed inset-0 z-[90] overflow-y-auto overflow-x-hidden bg-black/80 p-3 backdrop-blur-sm sm:p-6" style={{ touchAction: "pan-x pan-y" }}>
-          <div className="mx-auto w-full max-w-4xl overflow-x-hidden rounded-[30px] border border-white/[.09] bg-[#09120e] p-5 shadow-2xl sm:p-7">
+          <div className="mx-auto w-full rounded-[30px] border border-white/[.09] bg-[#09120e] p-5 shadow-2xl sm:p-7" style={{ maxWidth: "min(56rem, calc(100vw - 24px))", overflowX: "hidden" }}>
             {!expeditionEntered ? (
-            <div className="flex items-center justify-between gap-4">
-              <div>
+            <div className="flex min-w-0 items-center justify-between gap-4">
+              <div className="min-w-0">
                 <div className="section-kicker">Special event</div>
                 <h2 className="mt-2 text-3xl font-semibold">Canopy Hunter</h2>
               </div>
-              <button onClick={closeExpedition} className="rounded-xl border border-white/[.09] px-4 py-2 text-sm font-bold text-white/60">Close</button>
+              <button onClick={closeExpedition} className="shrink-0 rounded-xl border border-white/[.09] px-4 py-2 text-sm font-bold text-white/60">Close</button>
             </div>
             ) : null}
             {!expeditionEntered ? (
@@ -2328,10 +2328,12 @@ export function ChondroBreederGameV3({ screen = "all" }: { screen?: BreederGameS
                   green tree pythons you find, and bring them home to your colony.
                 </p>
                 {/* Arcade token wallet + payment toggle */}
-                <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-amber-200/20 bg-amber-200/[.05] p-3">
-                  <span className="text-sm font-black text-amber-100">🪙 {tokenBal.toLocaleString()}</span>
-                  <span className="text-xs text-white/50">arcade tokens — earn them playing the arcade games</span>
-                  <div className="ml-auto flex items-center gap-1 rounded-xl border border-white/10 bg-black/40 p-1">
+                <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-amber-200/20 bg-amber-200/[.05] p-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <span className="shrink-0 text-sm font-black text-amber-100">🪙 {tokenBal.toLocaleString()}</span>
+                    <span className="min-w-0 text-xs text-white/50">arcade tokens — earn them playing the arcade games</span>
+                  </div>
+                  <div className="flex items-center gap-1 self-start rounded-xl border border-white/10 bg-black/40 p-1 sm:ml-auto sm:self-auto">
                     <button
                       type="button"
                       onClick={() => setPayWithTokens(false)}
@@ -2433,11 +2435,11 @@ export function ChondroBreederGameV3({ screen = "all" }: { screen?: BreederGameS
                               : "border-white/10 bg-white/[.03] hover:bg-white/[.06]"
                           }`}
                         >
-                          <span className="flex items-center justify-between gap-2">
-                            <span className="text-sm font-bold text-white/85">
+                          <span className="flex min-w-0 items-center justify-between gap-2">
+                            <span className="min-w-0 truncate text-sm font-bold text-white/85">
                               <em>{short}</em>
                             </span>
-                            <span className="text-[11px] font-bold uppercase tracking-[.1em] text-white/40">
+                            <span className="shrink-0 text-[11px] font-bold uppercase tracking-[.1em] text-white/40">
                               {recovering ? `🌿 ${recoveryInDays(region.id)}d` : hot ? "🔥 hot" : region.name}
                             </span>
                           </span>
