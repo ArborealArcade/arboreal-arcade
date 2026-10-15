@@ -1,10 +1,12 @@
 import Image from "next/image";
+import Link from "next/link";
 import GameCard from "./GameCard";
 import { ArcadeHub, TokenChip } from "@/components/arcade/ArcadeHub";
 import { ArcadeToasts } from "@/components/arcade/ArcadeToasts";
 import { DailyTrivia } from "@/components/arcade/DailyTrivia";
 import { DailyBlackjack } from "@/components/arcade/DailyBlackjack";
 import { RedeemCodeCard } from "@/components/arcade/RedeemCodeCard";
+import { getServerIdentity } from "@/lib/supabase-auth";
 
 
 const keeperSteps = [
@@ -37,7 +39,9 @@ const pokerSteps = [
   { title: "4 · WEEKLY TOKENS", text: "Stakes tokens refresh weekly, so every keeper gets a regular shot at the table." },
 ];
 
-export default function ArcadePage() {
+export default async function ArcadePage() {
+  const identity = await getServerIdentity();
+  const isOwner = identity?.user.user_role === "owner";
   return (
     <main className="bg-black">
       {/* Page header: Arboreal Arcade logo on black */}
@@ -52,6 +56,16 @@ export default function ArcadePage() {
             sizes="(max-width: 672px) 100vw, 672px"
             className="block h-auto w-full"
           />
+          {isOwner && (
+            <div className="mt-4 flex justify-center">
+              <Link
+                href="/arcade/owner"
+                className="rounded-full bg-amber-400 px-6 py-2.5 text-sm font-bold text-black shadow-lg transition hover:bg-amber-300"
+              >
+                ⚙️ Owner Console
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
