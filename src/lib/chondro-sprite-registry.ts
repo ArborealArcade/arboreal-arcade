@@ -76,7 +76,10 @@ const localitySprites: Record<string, StageSpriteSet> = {
         variant("/hatchery/snakes/localities/cyclops/red-neonate-2.webp"),
         variant("/hatchery/snakes/localities/cyclops/red-neonate-3.webp"),
       ],
-      Yellow: [variant("/hatchery/snakes/localities/cyclops/yellow-neonate.webp")],
+      Yellow: [
+        variant("/hatchery/snakes/localities/cyclops/yellow-neonate.webp"),
+        variant("/hatchery/snakes/localities/cyclops/yellow-neonate-2.webp"),
+      ],
     },
     adult: {
       Red: [
@@ -139,10 +142,14 @@ const localitySprites: Record<string, StageSpriteSet> = {
         variant("/hatchery/snakes/localities/sorong/red-adult.webp"),
         variant("/hatchery/snakes/localities/sorong/red-adult-2.webp"),
         variant("/hatchery/snakes/localities/sorong/red-adult-3.webp"),
+        // Green adult, hatchling color unconfirmed (move pools if the owner says otherwise).
+        variant("/hatchery/snakes/localities/sorong/red-adult-4.webp"),
       ],
       Yellow: [
         variant("/hatchery/snakes/localities/sorong/yellow-adult.webp"),
         variant("/hatchery/snakes/special/sorong-yellow-adult-a-plus.webp", { minPhenotypeScore: 85 }),
+        // Green adult from a yellow hatchling.
+        variant("/hatchery/snakes/localities/sorong/yellow-adult-3.webp"),
       ],
     },
   },
@@ -152,7 +159,11 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Yellow: [variant("/hatchery/snakes/localities/timika/yellow-neonate.webp")],
     },
     adult: {
-      Red: [variant("/hatchery/snakes/localities/timika/red-adult.webp")],
+      Red: [
+        variant("/hatchery/snakes/localities/timika/red-adult.webp"),
+        // Blue-phase adult variant (hatchling color unconfirmed; move pools if the owner says otherwise).
+        variant("/hatchery/snakes/localities/timika/blue-adult.webp"),
+      ],
       Yellow: [variant("/hatchery/snakes/localities/timika/yellow-adult.webp")],
     },
   },
@@ -166,6 +177,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
         variant("/hatchery/snakes/localities/kofiau/yellow-adult-2.webp"),
         variant("/hatchery/snakes/localities/kofiau/yellow-adult-3.webp"),
         variant("/hatchery/snakes/localities/kofiau/yellow-adult-4.webp"),
+        variant("/hatchery/snakes/localities/kofiau/yellow-adult-5.webp"),
       ],
     },
   },
@@ -207,6 +219,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Yellow: [
         variant("/hatchery/snakes/localities/yapen/yellow-neonate.webp"),
         variant("/hatchery/snakes/localities/yapen/yellow-neonate-2.webp"),
+        variant("/hatchery/snakes/localities/yapen/yellow-neonate-3.webp"),
       ],
     },
     adult: {
@@ -247,7 +260,10 @@ const localitySprites: Record<string, StageSpriteSet> = {
   },
   Aru: {
     juvenile: {
-      Yellow: [variant("/hatchery/snakes/recovered-v7/aru/yellow-neonate.webp")],
+      Yellow: [
+        variant("/hatchery/snakes/recovered-v7/aru/yellow-neonate.webp"),
+        variant("/hatchery/snakes/localities/aru/yellow-neonate-2.webp"),
+      ],
     },
     adultAny: [
       variant("/hatchery/snakes/localities/aru/adult.webp"),
