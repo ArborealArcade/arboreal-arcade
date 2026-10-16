@@ -55,8 +55,12 @@ const spritePathFallbacks: Record<string, string[]> = {};
 const localitySprites: Record<string, StageSpriteSet> = {
   Lereh: {
     juvenile: {
-      Red: [],
-      Yellow: [],
+      Red: [
+        variant("/hatchery/snakes/localities/lereh/red-neonate.webp"),
+      ],
+      Yellow: [
+        variant("/hatchery/snakes/localities/lereh/yellow-neonate.webp"),
+      ],
     },
     adult: {
       Red: [
@@ -105,13 +109,17 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Red: [
         variant("/hatchery/snakes/localities/manokwari/red-neonate.webp"),
       ],
-      Yellow: [],
+      Yellow: [
+        variant("/hatchery/snakes/localities/manokwari/yellow-neonate.webp"),
+      ],
     },
     adult: {
       Red: [
         variant("/hatchery/snakes/localities/manokwari/red-adult-2.webp", { maxPhenotypeScore: 84 }),
       ],
-      Yellow: [],
+      Yellow: [
+        variant("/hatchery/snakes/localities/manokwari/yellow-adult.webp"),
+      ],
     },
   },
   Arfak: {
@@ -140,7 +148,9 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Red: [
         variant("/hatchery/snakes/localities/sorong/red-neonate.webp"),
       ],
-      Yellow: [],
+      Yellow: [
+        variant("/hatchery/snakes/localities/sorong/yellow-neonate.webp"),
+      ],
     },
     adult: {
       Red: [
