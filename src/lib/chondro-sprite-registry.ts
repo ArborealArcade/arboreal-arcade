@@ -70,7 +70,6 @@ const localitySprites: Record<string, StageSpriteSet> = {
   Wamena: {
     juvenile: {
       Red: [
-        variant("/hatchery/snakes/localities/wamena/red-neonate-live.webp"),
       ],
       Yellow: [
         variant("/hatchery/snakes/localities/wamena/yellow-neonate.webp"),
@@ -156,7 +155,6 @@ const localitySprites: Record<string, StageSpriteSet> = {
   Timika: {
     juvenile: {
       Red: [
-        variant("/hatchery/snakes/localities/timika/red-neonate-2.webp"),
       ],
       Yellow: [
         variant("/hatchery/snakes/localities/timika/yellow-neonate.webp"),
