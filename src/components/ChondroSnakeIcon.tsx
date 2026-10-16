@@ -113,7 +113,7 @@ export function ChondroSnakeIcon({
   };
 
   return (
-    <div className={`relative overflow-hidden rounded-2xl border border-white/[.06] bg-black/20 ${mini ? "h-20 w-20" : tiny ? "h-44 w-full" : large ? "h-60 w-full" : compact ? "h-40 min-w-40 sm:h-48 sm:min-w-48" : "h-56 w-full sm:h-72"}`}>
+    <div className={`relative overflow-hidden rounded-2xl border border-white/[.06] bg-black/20 ${mini ? "h-20 w-20" : tiny ? "h-44 w-full" : large ? "h-60 w-full" : compact ? "aspect-square w-full" : "h-56 w-full sm:h-72"}`}>
       {versionedSrc ? (
         <img
           key={versionedSrc}
@@ -124,7 +124,7 @@ export function ChondroSnakeIcon({
           alt={`${name} illustrated virtual game portrait`}
           loading="lazy"
           decoding="async"
-          className={`h-full w-full object-contain ${tiny ? "p-1" : "p-1 sm:p-2"} ${isSubadult ? "scale-[0.86]" : ""}`}
+          className={`h-full w-full object-contain ${tiny || compact ? "p-0" : "p-1 sm:p-2"} ${isSubadult ? "scale-[0.86]" : ""}`}
         />
       ) : null}
       <div

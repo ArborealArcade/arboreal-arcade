@@ -168,7 +168,7 @@ function EmeraldPortrait({ animal }: { animal: EmeraldAnimal }) {
 
 function GtpPortrait({ animal }: { animal: GtpAnimal }) {
   return (
-    <div className="mx-auto max-w-[240px]">
+    <div className="mx-auto max-w-[200px]">
       <ChondroSnakeIcon
         subspecies={animal.subspecies as never}
         name={animal.name ?? "Unnamed Green Tree Python"}

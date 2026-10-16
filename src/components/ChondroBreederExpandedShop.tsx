@@ -833,7 +833,7 @@ export function ChondroBreederExpandedShop({ section, layout }: { section?: "qa"
           className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-3 [scrollbar-width:thin] [scrollbar-color:rgba(196,181,253,.28)_transparent]"
         >
           {spriteQaItems.map((item) => (
-            <article key={item.id} className="w-[78%] shrink-0 snap-start rounded-2xl border border-white/[.065] bg-black/15 p-3 sm:w-[260px]">
+            <article key={item.id} className="w-[60%] shrink-0 snap-start rounded-2xl border border-white/[.065] bg-black/15 p-2 sm:w-[200px]">
               <ChondroSnakeIcon
                 subspecies={item.subspecies}
                 name={item.label}
@@ -847,7 +847,7 @@ export function ChondroBreederExpandedShop({ section, layout }: { section?: "qa"
                 spriteSeed={item.spriteSeed}
                 compact
               />
-              <div className="mt-3 text-sm font-semibold text-white/78">{item.label}</div>
+              <div className="mt-2 text-sm font-semibold text-white/78">{item.label}</div>
               <div className="mt-1 text-[10px] leading-4 text-white/36">{item.detail}</div>
               <div className="mt-2 flex flex-wrap gap-1.5 text-[8px] font-black uppercase tracking-[.1em]">
                 <span className="rounded-full border border-white/[.07] px-2 py-1 text-white/45">{item.classification}</span>
