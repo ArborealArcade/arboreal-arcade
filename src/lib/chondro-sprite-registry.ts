@@ -155,7 +155,10 @@ const localitySprites: Record<string, StageSpriteSet> = {
   },
   Timika: {
     juvenile: {
-      Red: [variant("/hatchery/snakes/localities/timika/red-neonate.webp")],
+      Red: [
+        variant("/hatchery/snakes/localities/timika/red-neonate.webp"),
+        variant("/hatchery/snakes/localities/timika/red-neonate-2.webp"),
+      ],
       Yellow: [variant("/hatchery/snakes/localities/timika/yellow-neonate.webp")],
     },
     adult: {
