@@ -276,6 +276,18 @@ const localitySprites: Record<string, StageSpriteSet> = {
     },
     adultAny: [variant("/hatchery/snakes/localities/merauke/adult.webp")],
   },
+  // Raja Ampat island localities (2026-10-16): neonate art only so far.
+  // Red juvenile and adult slots intentionally return Sprite pending.
+  Batanta: {
+    juvenile: {
+      Yellow: [variant("/hatchery/snakes/localities/batanta/yellow-neonate.webp")],
+    },
+  },
+  Waigeo: {
+    juvenile: {
+      Yellow: [variant("/hatchery/snakes/localities/waigeo/yellow-neonate.webp")],
+    },
+  },
 };
 
 const specificHybridSprites: Record<string, StageSpriteSet> = {
