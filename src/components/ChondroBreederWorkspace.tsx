@@ -142,6 +142,20 @@ export function ChondroBreederWorkspace() {
       .catch(() => {});
     return () => { active = false; };
   }, []);
+  // Weekend Expo Hall is owner-only while it's rough: the expo card and the
+  // expo view stay hidden for everyone except the owner. Fail-closed — the
+  // flag starts false and only flips on a verified owner JWT.
+  const [expoVisible, setExpoVisible] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/canopy-hunter/status", { cache: "no-store" })
+      .then((response) => response.json().catch(() => null))
+      .then((data) => {
+        if (active && data && data.isOwner === true) setExpoVisible(true);
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
   function toggleNavCollapsed() {
     setNavCollapsed((prev) => !prev);
   }
@@ -155,7 +169,7 @@ export function ChondroBreederWorkspace() {
   const viewRef = useRef<WorkspaceView>("home"); const bredLineRef = useRef(false);
   const active = views.find((item) => item.id === view) ?? views[0];
 
-  function openView(next: WorkspaceView) { if (viewRef.current === "market" && next !== "market") playHankScaleLine(16); if (next === "breeding" && !bredLineRef.current) { bredLineRef.current = true; playHankScaleLine(14); } viewRef.current = next;
+  function openView(next: WorkspaceView) { if (viewRef.current === "market" && next !== "market") playHankScaleLine(16); if (next === "breeding" && !bredLineRef.current) { bredLineRef.current = true; playHankScaleLine(14); } if (next === "expo" && !expoVisible) next = "home"; viewRef.current = next;
     setView(next);
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
   }
@@ -191,7 +205,7 @@ export function ChondroBreederWorkspace() {
       </header>
 
       <main>
-        {view === "home" ? <BreederHome onOpen={openView} /> : null}
+        {view === "home" ? <BreederHome onOpen={openView} expoVisible={expoVisible} /> : null}
         {view === "market" ? (
           shopTheme === "halloween"
             ? <ArborealKeeperReptiShopHalloween navCollapsed={navCollapsed} costume={hankCostume} />
@@ -225,7 +239,7 @@ export function ChondroBreederWorkspace() {
         {view === "conservation" ? <SecondaryScreen active={active} onBack={() => openView("home")}><ChondroConservationPartnerships /></SecondaryScreen> : null}
         {view === "community" ? <SecondaryScreen active={active} onBack={() => openView("home")}><ChondroBreederManagementView section="community" /></SecondaryScreen> : null}
         {view === "guide" ? <SecondaryScreen active={active} onBack={() => openView("home")}><ChondroBreederSubspeciesPhenotypes /></SecondaryScreen> : null}
-        {view === "expo" ? <ArborealKeeperExpo onBack={() => openView("home")} /> : null}
+        {view === "expo" && expoVisible ? <ArborealKeeperExpo onBack={() => openView("home")} /> : null}
       </main>
 
       <ChondroGameNotifications />
@@ -297,7 +311,7 @@ function ScreenHeading({ eyebrow, title, detail }: { eyebrow: string; title: str
   );
 }
 
-function BreederHome({ onOpen }: { onOpen: (view: WorkspaceView) => void }) {
+function BreederHome({ onOpen, expoVisible }: { onOpen: (view: WorkspaceView) => void; expoVisible: boolean }) {
   const tools: WorkspaceView[] = ["career", "projects", "conservation", "community", "guide"];
   const [expedition, setExpedition] = useState(readExpeditionCardState);
   useEffect(() => {
@@ -333,7 +347,8 @@ function BreederHome({ onOpen }: { onOpen: (view: WorkspaceView) => void }) {
             </div>
           ) : null}
 
-          {/* Weekend Expo event card */}
+          {/* Weekend Expo event card — owner-only while the expo is rough */}
+          {expoVisible ? (
           <button
             type="button"
             onClick={() => onOpen("expo")}
@@ -351,6 +366,7 @@ function BreederHome({ onOpen }: { onOpen: (view: WorkspaceView) => void }) {
               <span className="shrink-0 text-2xl text-white/30 transition group-hover:translate-x-1 group-hover:text-white/60">→</span>
             </div>
           </button>
+          ) : null}
 
           <section className="mt-4 overflow-hidden rounded-[30px] border border-emerald-300/12 bg-[#030806] shadow-[0_24px_70px_rgba(0,0,0,.28)]">
             <div className="grid lg:grid-cols-[minmax(330px,46%)_1fr]">
