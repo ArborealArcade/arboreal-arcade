@@ -148,8 +148,6 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Yellow: [
         variant("/hatchery/snakes/localities/sorong/yellow-adult.webp"),
         variant("/hatchery/snakes/special/sorong-yellow-adult-a-plus.webp", { minPhenotypeScore: 85 }),
-        // Green adult from a yellow hatchling.
-        variant("/hatchery/snakes/localities/sorong/yellow-adult-3.webp"),
       ],
     },
   },
