@@ -150,10 +150,12 @@ const localitySprites: Record<string, StageSpriteSet> = {
     },
     adult: {
       Red: [
-        variant("/hatchery/snakes/localities/sorong/red-adult.webp"),],
+        // PLACEHOLDER: Manokwari sprite until dedicated Sorong art is made.
+        variant("/hatchery/snakes/localities/manokwari/red-adult.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/sorong/yellow-adult.webp"),
-        variant("/hatchery/snakes/localities/sorong/yellow-adult-a-plus.webp"),],
+        variant("/hatchery/snakes/localities/sorong/yellow-adult-a-plus.webp"),
+        variant("/hatchery/snakes/localities/sorong/yellow-adult-2.webp"),],
     },
   },
   Timika: {
