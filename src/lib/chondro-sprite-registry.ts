@@ -93,7 +93,9 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Red: [
         variant("/hatchery/snakes/localities/cyclops/red-adult-6.webp"),        variant("/hatchery/snakes/localities/cyclops/red-adult-1.webp"),
         variant("/hatchery/snakes/localities/cyclops/red-adult-2.webp"),
-        variant("/hatchery/snakes/localities/cyclops/red-adult-3.webp"),],
+        variant("/hatchery/snakes/localities/cyclops/red-adult-3.webp"),
+        // Blue-phase variant from 09-30 Specials pack.
+        variant("/hatchery/snakes/localities/cyclops/red-adult-blue-phase.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/cyclops/yellow-adult.webp"),
         variant("/hatchery/snakes/localities/cyclops/yellow-adult-2.webp"),],
@@ -145,9 +147,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
     },
     adult: {
       Red: [
-        // Green adult, hatchling color unconfirmed (move pools if the owner says otherwise).
-        // PLACEHOLDER: Jayapura sprite until dedicated Sorong art is made.
-        variant("/hatchery/snakes/localities/jayapura/red-adult.webp"),],
+        variant("/hatchery/snakes/localities/sorong/red-adult.webp"),],
       Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Sorong art is made.
         variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
@@ -179,7 +179,8 @@ const localitySprites: Record<string, StageSpriteSet> = {
         variant("/hatchery/snakes/localities/kofiau/yellow-adult-1.webp"),
         variant("/hatchery/snakes/localities/kofiau/yellow-adult-2.webp"),
         variant("/hatchery/snakes/localities/kofiau/yellow-adult-3.webp"),
-        variant("/hatchery/snakes/localities/kofiau/yellow-adult-orig.webp"),],
+        variant("/hatchery/snakes/localities/kofiau/yellow-adult-orig.webp"),
+        variant("/hatchery/snakes/localities/kofiau/yellow-adult-6.webp"),],
     },
   },
   Jayapura: {
@@ -187,7 +188,8 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Red: [        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),
         variant("/hatchery/snakes/localities/jayapura/red-neonate-2.webp"),        variant("/hatchery/snakes/localities/jayapura/red-neonate-4.webp"),],
       Yellow: [        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),
-        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-2.webp"),],
+        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-2.webp"),
+        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-blue-phase.webp"),],
     },
     adult: {
       Red: [
@@ -206,7 +208,8 @@ const localitySprites: Record<string, StageSpriteSet> = {
         variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/yapen/yellow-neonate-3.webp"),
-        variant("/hatchery/snakes/localities/yapen/yellow-neonate-orig.webp"),],
+        variant("/hatchery/snakes/localities/yapen/yellow-neonate-orig.webp"),
+        variant("/hatchery/snakes/localities/yapen/yellow-neonate-4.webp"),],
     },
     adult: {
       // Dedicated Yapen adult art still needed (purged 2026-10-16).
