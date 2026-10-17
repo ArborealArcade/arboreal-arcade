@@ -82,7 +82,8 @@ const localitySprites: Record<string, StageSpriteSet> = {
     adult: {
       Red: [
         variant("/hatchery/snakes/localities/wamena/red-adult.webp"),
-      ],
+        variant("/hatchery/snakes/localities/wamena/red-adult-orig.webp"),
+        variant("/hatchery/snakes/localities/wamena/wamena-aru-cross-orig.webp"),],
       Yellow: [],
     },
   },
@@ -134,7 +135,9 @@ const localitySprites: Record<string, StageSpriteSet> = {
       ],
       // Owner 2026-09-26: Yellow Arfak juveniles use the Yellow Manokwari neonate sprite
       // (both purged 2026-10-16; rule resumes when remakes land).
-      Yellow: [],
+      Yellow: [
+        variant("/hatchery/snakes/localities/arfak/yellow-neonate.webp"),
+      ],
     },
     adult: {
       Red: [
@@ -172,7 +175,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
       ],
       Yellow: [
         variant("/hatchery/snakes/localities/timika/yellow-neonate.webp"),
-      ],
+        variant("/hatchery/snakes/localities/timika/yellow-neonate-orig.webp"),],
     },
     adult: {
       Red: [
@@ -194,7 +197,8 @@ const localitySprites: Record<string, StageSpriteSet> = {
         variant("/hatchery/snakes/localities/kofiau/yellow-adult-5.webp"),
         variant("/hatchery/snakes/localities/kofiau/yellow-adult-1.webp"),
         variant("/hatchery/snakes/localities/kofiau/yellow-adult-2.webp"),
-        variant("/hatchery/snakes/localities/kofiau/yellow-adult-3.webp"),],
+        variant("/hatchery/snakes/localities/kofiau/yellow-adult-3.webp"),
+        variant("/hatchery/snakes/localities/kofiau/yellow-adult-orig.webp"),],
     },
   },
   Jayapura: {
@@ -227,7 +231,8 @@ const localitySprites: Record<string, StageSpriteSet> = {
       ],
       Yellow: [
         variant("/hatchery/snakes/localities/yapen/yellow-neonate-3.webp"),
-      ],
+        variant("/hatchery/snakes/localities/yapen/yellow-neonate-orig.webp"),
+        variant("/hatchery/snakes/localities/yapen/yellow-neonate-2-orig.webp"),],
     },
     adult: {
       // Dedicated Yapen adult art still needed (purged 2026-10-16).
@@ -271,7 +276,8 @@ const localitySprites: Record<string, StageSpriteSet> = {
     },
     adultAny: [
       variant("/hatchery/snakes/localities/aru/adult-2.webp"),
-    ],
+      variant("/hatchery/snakes/localities/aru/adult.webp"),
+      variant("/hatchery/snakes/localities/aru/adult-a-plus.webp"),],
   },
   Merauke: {
     juvenile: {
@@ -280,7 +286,8 @@ const localitySprites: Record<string, StageSpriteSet> = {
       ],
     },
     // adult.webp replaced 2026-10-16 with the clean 09-30 pack art (was a painted-background version).
-    adultAny: [variant("/hatchery/snakes/localities/merauke/adult.webp")],
+    adultAny: [variant("/hatchery/snakes/localities/merauke/adult.webp"),
+      variant("/hatchery/snakes/localities/merauke/yellow-adult.webp"),],
   },
   // Raja Ampat island localities (2026-10-16): neonate art only so far.
   // Red juvenile and adult slots intentionally return Sprite pending.
@@ -295,6 +302,32 @@ const localitySprites: Record<string, StageSpriteSet> = {
   Waigeo: {
     juvenile: {
       Yellow: [variant("/hatchery/snakes/localities/waigeo/yellow-neonate.webp")],
+    },
+  },
+  Designer: {
+    juvenile: {
+      Red: [
+        variant("/hatchery/snakes/localities/designer/red-neonate.webp"),
+      ],
+      Yellow: [
+        variant("/hatchery/snakes/localities/designer/yellow-neonate.webp"),
+      ],
+    },
+    adult: {
+      Red: [],
+      Yellow: [],
+    },
+  },
+  Hybrid: {
+    juvenile: {
+      Red: [],
+      Yellow: [],
+    },
+    adult: {
+      Red: [
+        variant("/hatchery/snakes/localities/hybrids/pulcher-utaraensis-red-adult.webp"),
+      ],
+      Yellow: [],
     },
   },
 };
