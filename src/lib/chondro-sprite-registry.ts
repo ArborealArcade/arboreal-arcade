@@ -300,7 +300,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
       ],
       Yellow: [
         variant("/hatchery/snakes/localities/designer/yellow-neonate.webp"),
-      ],
+        variant("/hatchery/snakes/localities/designer/yellow-neonate-2.webp"),],
     },
     adult: {
       Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Designer art is made.
@@ -308,7 +308,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Designer art is made.
         variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),
         variant("/hatchery/snakes/localities/designer/yellow-adult.webp"),
-        variant("/hatchery/snakes/localities/designer/yellow-adult-2.webp"),],
+        ],
     },
   },
   Hybrid: {
