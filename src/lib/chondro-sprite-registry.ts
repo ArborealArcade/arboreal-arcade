@@ -138,7 +138,9 @@ const localitySprites: Record<string, StageSpriteSet> = {
   },
   Sorong: {
     juvenile: {
-      Red: [],
+      Red: [
+        // PLACEHOLDER: Manokwari sprite until dedicated Sorong art is made.
+        variant("/hatchery/snakes/localities/manokwari/red-neonate.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/sorong/yellow-neonate.webp"),],
     },
@@ -239,11 +241,15 @@ const localitySprites: Record<string, StageSpriteSet> = {
     // Owner rule: Numfor uses Biak art until dedicated Numfor art is produced
     // (both purged 2026-10-16; rule resumes when remakes land).
     juvenile: {
-      Red: [],
+      Red: [
+        // PLACEHOLDER: Biak sprite until dedicated Numfor art is made.
+        variant("/hatchery/snakes/localities/biak/red-neonate.webp"),],
       Yellow: [],
     },
     adult: {
-      Red: [],
+      Red: [
+        // PLACEHOLDER: Biak sprite until dedicated Numfor art is made.
+        variant("/hatchery/snakes/localities/biak/red-adult.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/numfor/yellow-adult.webp"),],
     },
