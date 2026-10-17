@@ -1,106 +1,75 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sprite Test Wheel - All 60 Sprites</title><style>
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sprite Wheel - Click to View Variants</title>
+<style>
 body { background: #0a0a0a; color: #fff; font-family: system-ui, sans-serif; margin: 0; padding: 20px; }
-h1 { text-align: center; } h2 { color: #4ade80; border-bottom: 1px solid #333; padding-bottom: 8px; margin-top: 40px; text-transform: capitalize; }
+h1 { text-align: center; }
+h2 { color: #4ade80; border-bottom: 1px solid #333; padding-bottom: 8px; margin-top: 40px; text-transform: capitalize; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
-.card { background: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
+.card { background: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #333; cursor: pointer; transition: transform 0.1s; }
+.card:hover { transform: scale(1.02); border-color: #4ade80; }
 .card img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #000; display: block; }
 .card .label { padding: 8px 12px; font-size: 12px; color: #aaa; word-break: break-word; }
 .card .label strong { color: #fff; display: block; font-size: 13px; }
-.count { text-align: center; color: #666; margin-bottom: 20px; }</style></head><body>
-<h1>🐍 Sprite Test Wheel</h1><div class="count">60 sprites total — every single one</div>
-<h2>arfak (2)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/arfak/red-adult.webp" loading="lazy" alt="red-adult.webp"><div class="label"><strong>red adult</strong>red-adult.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/arfak/red-neonate.webp" loading="lazy" alt="red-neonate.webp"><div class="label"><strong>red neonate</strong>red-neonate.webp</div></div>
+.card .badge { display: inline-block; background: #4ade80; color: #000; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; margin-top: 4px; }
+.count { text-align: center; color: #666; margin-bottom: 20px; }
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; overflow-y: auto; padding: 20px; box-sizing: border-box; }
+.modal.active { display: block; }
+.modal-content { max-width: 1200px; margin: 0 auto; }
+.modal h2 { color: #4ade80; margin-top: 0; }
+.modal .close { position: fixed; top: 20px; right: 30px; font-size: 36px; color: #fff; cursor: pointer; background: none; border: none; }
+.modal .variant-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; margin-top: 20px; }
+.modal .variant-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #444; }
+.modal .variant-card img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #000; display: block; }
+.modal .variant-card .vlabel { padding: 8px 12px; font-size: 11px; color: #888; word-break: break-all; }
+</style></head><body>
+<h1>🐍 Sprite Wheel - What's In Game</h1>
+<div class="count">Click any pool to see all its variants</div>
+<div id="wheel"></div>
+<div class="modal" id="modal">
+  <button class="close" onclick="closeModal()">&times;</button>
+  <div class="modal-content"><h2 id="modal-title"></h2><div class="variant-grid" id="modal-grid"></div></div>
 </div>
-<h2>aru (4)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/aru/adult-2.webp" loading="lazy" alt="adult-2.webp"><div class="label"><strong>adult 2</strong>adult-2.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/aru/adult-a-plus.webp" loading="lazy" alt="adult-a-plus.webp"><div class="label"><strong>adult a plus</strong>adult-a-plus.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/aru/adult.webp" loading="lazy" alt="adult.webp"><div class="label"><strong>adult</strong>adult.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/aru/yellow-neonate-2.webp" loading="lazy" alt="yellow-neonate-2.webp"><div class="label"><strong>yellow neonate 2</strong>yellow-neonate-2.webp</div></div>
-</div>
-<h2>batanta (2)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/batanta/yellow-neonate-2.webp" loading="lazy" alt="yellow-neonate-2.webp"><div class="label"><strong>yellow neonate 2</strong>yellow-neonate-2.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/batanta/yellow-neonate.webp" loading="lazy" alt="yellow-neonate.webp"><div class="label"><strong>yellow neonate</strong>yellow-neonate.webp</div></div>
-</div>
-<h2>biak (2)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/biak/red-neonate.webp" loading="lazy" alt="red-neonate.webp"><div class="label"><strong>red neonate</strong>red-neonate.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/biak/yellow-adult.webp" loading="lazy" alt="yellow-adult.webp"><div class="label"><strong>yellow adult</strong>yellow-adult.webp</div></div>
-</div>
-<h2>cyclops (10)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/cyclops/red-adult-1.webp" loading="lazy" alt="red-adult-1.webp"><div class="label"><strong>red adult 1</strong>red-adult-1.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/cyclops/red-adult-2.webp" loading="lazy" alt="red-adult-2.webp"><div class="label"><strong>red adult 2</strong>red-adult-2.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/cyclops/red-adult-3.webp" loading="lazy" alt="red-adult-3.webp"><div class="label"><strong>red adult 3</strong>red-adult-3.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/cyclops/red-adult-6.webp" loading="lazy" alt="red-adult-6.webp"><div class="label"><strong>red adult 6</strong>red-adult-6.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/cyclops/red-adult-blue-phase.webp" loading="lazy" alt="red-adult-blue-phase.webp"><div class="label"><strong>red adult blue phase</strong>red-adult-blue-phase.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/cyclops/red-neonate-2.webp" loading="lazy" alt="red-neonate-2.webp"><div class="label"><strong>red neonate 2</strong>red-neonate-2.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/cyclops/red-neonate-3.webp" loading="lazy" alt="red-neonate-3.webp"><div class="label"><strong>red neonate 3</strong>red-neonate-3.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/cyclops/yellow-adult-2.webp" loading="lazy" alt="yellow-adult-2.webp"><div class="label"><strong>yellow adult 2</strong>yellow-adult-2.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/cyclops/yellow-adult.webp" loading="lazy" alt="yellow-adult.webp"><div class="label"><strong>yellow adult</strong>yellow-adult.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/cyclops/yellow-neonate.webp" loading="lazy" alt="yellow-neonate.webp"><div class="label"><strong>yellow neonate</strong>yellow-neonate.webp</div></div>
-</div>
-<h2>designer (2)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/designer/red-neonate.webp" loading="lazy" alt="red-neonate.webp"><div class="label"><strong>red neonate</strong>red-neonate.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/designer/yellow-neonate.webp" loading="lazy" alt="yellow-neonate.webp"><div class="label"><strong>yellow neonate</strong>yellow-neonate.webp</div></div>
-</div>
-<h2>hybrids (1)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/hybrids/pulcher-utaraensis-red-adult.webp" loading="lazy" alt="pulcher-utaraensis-red-adult.webp"><div class="label"><strong>pulcher utaraensis red adult</strong>pulcher-utaraensis-red-adult.webp</div></div>
-</div>
-<h2>jayapura (12)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/jayapura/red-adult-2.webp" loading="lazy" alt="red-adult-2.webp"><div class="label"><strong>red adult 2</strong>red-adult-2.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/jayapura/red-adult-3.webp" loading="lazy" alt="red-adult-3.webp"><div class="label"><strong>red adult 3</strong>red-adult-3.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/jayapura/red-adult-a-plus.webp" loading="lazy" alt="red-adult-a-plus.webp"><div class="label"><strong>red adult a plus</strong>red-adult-a-plus.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/jayapura/red-adult.webp" loading="lazy" alt="red-adult.webp"><div class="label"><strong>red adult</strong>red-adult.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/jayapura/red-neonate-1.webp" loading="lazy" alt="red-neonate-1.webp"><div class="label"><strong>red neonate 1</strong>red-neonate-1.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/jayapura/red-neonate-2.webp" loading="lazy" alt="red-neonate-2.webp"><div class="label"><strong>red neonate 2</strong>red-neonate-2.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/jayapura/red-neonate-4.webp" loading="lazy" alt="red-neonate-4.webp"><div class="label"><strong>red neonate 4</strong>red-neonate-4.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/jayapura/yellow-adult-2.webp" loading="lazy" alt="yellow-adult-2.webp"><div class="label"><strong>yellow adult 2</strong>yellow-adult-2.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/jayapura/yellow-adult-a-plus.webp" loading="lazy" alt="yellow-adult-a-plus.webp"><div class="label"><strong>yellow adult a plus</strong>yellow-adult-a-plus.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp" loading="lazy" alt="yellow-neonate-1.webp"><div class="label"><strong>yellow neonate 1</strong>yellow-neonate-1.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/jayapura/yellow-neonate-2.webp" loading="lazy" alt="yellow-neonate-2.webp"><div class="label"><strong>yellow neonate 2</strong>yellow-neonate-2.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/jayapura/yellow-neonate-blue-phase.webp" loading="lazy" alt="yellow-neonate-blue-phase.webp"><div class="label"><strong>yellow neonate blue phase</strong>yellow-neonate-blue-phase.webp</div></div>
-</div>
-<h2>kofiau (7)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/kofiau/yellow-adult-1.webp" loading="lazy" alt="yellow-adult-1.webp"><div class="label"><strong>yellow adult 1</strong>yellow-adult-1.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/kofiau/yellow-adult-2.webp" loading="lazy" alt="yellow-adult-2.webp"><div class="label"><strong>yellow adult 2</strong>yellow-adult-2.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/kofiau/yellow-adult-3.webp" loading="lazy" alt="yellow-adult-3.webp"><div class="label"><strong>yellow adult 3</strong>yellow-adult-3.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/kofiau/yellow-adult-5.webp" loading="lazy" alt="yellow-adult-5.webp"><div class="label"><strong>yellow adult 5</strong>yellow-adult-5.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/kofiau/yellow-adult-6.webp" loading="lazy" alt="yellow-adult-6.webp"><div class="label"><strong>yellow adult 6</strong>yellow-adult-6.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/kofiau/yellow-adult-orig.webp" loading="lazy" alt="yellow-adult-orig.webp"><div class="label"><strong>yellow adult orig</strong>yellow-adult-orig.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/kofiau/yellow-neonate.webp" loading="lazy" alt="yellow-neonate.webp"><div class="label"><strong>yellow neonate</strong>yellow-neonate.webp</div></div>
-</div>
-<h2>lereh (3)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/lereh/red-adult-2.webp" loading="lazy" alt="red-adult-2.webp"><div class="label"><strong>red adult 2</strong>red-adult-2.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/lereh/red-adult.webp" loading="lazy" alt="red-adult.webp"><div class="label"><strong>red adult</strong>red-adult.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/lereh/yellow-adult-2.webp" loading="lazy" alt="yellow-adult-2.webp"><div class="label"><strong>yellow adult 2</strong>yellow-adult-2.webp</div></div>
-</div>
-<h2>manokwari (2)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/manokwari/red-adult-2.webp" loading="lazy" alt="red-adult-2.webp"><div class="label"><strong>red adult 2</strong>red-adult-2.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/manokwari/red-adult.webp" loading="lazy" alt="red-adult.webp"><div class="label"><strong>red adult</strong>red-adult.webp</div></div>
-</div>
-<h2>merauke (3)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/merauke/adult.webp" loading="lazy" alt="adult.webp"><div class="label"><strong>adult</strong>adult.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/merauke/yellow-adult.webp" loading="lazy" alt="yellow-adult.webp"><div class="label"><strong>yellow adult</strong>yellow-adult.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/merauke/yellow-neonate-2.webp" loading="lazy" alt="yellow-neonate-2.webp"><div class="label"><strong>yellow neonate 2</strong>yellow-neonate-2.webp</div></div>
-</div>
-<h2>sorong (1)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/sorong/red-adult.webp" loading="lazy" alt="red-adult.webp"><div class="label"><strong>red adult</strong>red-adult.webp</div></div>
-</div>
-<h2>timika (3)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/timika/blue-adult.webp" loading="lazy" alt="blue-adult.webp"><div class="label"><strong>blue adult</strong>blue-adult.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/timika/red-neonate.webp" loading="lazy" alt="red-neonate.webp"><div class="label"><strong>red neonate</strong>red-neonate.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/timika/yellow-neonate-orig.webp" loading="lazy" alt="yellow-neonate-orig.webp"><div class="label"><strong>yellow neonate orig</strong>yellow-neonate-orig.webp</div></div>
-</div>
-<h2>waigeo (1)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/waigeo/yellow-neonate.webp" loading="lazy" alt="yellow-neonate.webp"><div class="label"><strong>yellow neonate</strong>yellow-neonate.webp</div></div>
-</div>
-<h2>wamena (2)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/wamena/red-adult-orig.webp" loading="lazy" alt="red-adult-orig.webp"><div class="label"><strong>red adult orig</strong>red-adult-orig.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/wamena/wamena-aru-cross-orig.webp" loading="lazy" alt="wamena-aru-cross-orig.webp"><div class="label"><strong>wamena aru cross orig</strong>wamena-aru-cross-orig.webp</div></div>
-</div>
-<h2>yapen (3)</h2><div class="grid">
-<div class="card"><img src="/hatchery/snakes/localities/yapen/yellow-neonate-3.webp" loading="lazy" alt="yellow-neonate-3.webp"><div class="label"><strong>yellow neonate 3</strong>yellow-neonate-3.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/yapen/yellow-neonate-4.webp" loading="lazy" alt="yellow-neonate-4.webp"><div class="label"><strong>yellow neonate 4</strong>yellow-neonate-4.webp</div></div>
-<div class="card"><img src="/hatchery/snakes/localities/yapen/yellow-neonate-orig.webp" loading="lazy" alt="yellow-neonate-orig.webp"><div class="label"><strong>yellow neonate orig</strong>yellow-neonate-orig.webp</div></div>
-</div>
-</body></html>
+<script>
+const poolData = {"Lereh": {"juvenile.Red": ["/hatchery/snakes/localities/jayapura/red-neonate-1.webp"], "adult.Red": ["/hatchery/snakes/localities/lereh/red-adult-2.webp", "/hatchery/snakes/localities/lereh/red-adult.webp"]}, "Wamena": {"juvenile.Red": ["/hatchery/snakes/localities/jayapura/red-neonate-1.webp"], "adult.Red": ["/hatchery/snakes/localities/wamena/red-adult-orig.webp", "/hatchery/snakes/localities/wamena/wamena-aru-cross-orig.webp"]}, "Cyclops": {"juvenile.Red": ["/hatchery/snakes/localities/cyclops/red-neonate-2.webp", "/hatchery/snakes/localities/cyclops/red-neonate-3.webp"], "adult.Red": ["/hatchery/snakes/localities/cyclops/red-adult-6.webp", "/hatchery/snakes/localities/cyclops/red-adult-1.webp", "/hatchery/snakes/localities/cyclops/red-adult-2.webp", "/hatchery/snakes/localities/cyclops/red-adult-3.webp", "/hatchery/snakes/localities/cyclops/red-adult-blue-phase.webp"]}, "Manokwari": {"adult.Red": ["/hatchery/snakes/localities/manokwari/red-adult-2.webp", "/hatchery/snakes/localities/manokwari/red-adult.webp"]}, "Arfak": {"juvenile.Red": ["/hatchery/snakes/localities/arfak/red-neonate.webp"], "adult.Red": ["/hatchery/snakes/localities/arfak/red-adult.webp"]}, "Sorong": {"adult.Red": ["/hatchery/snakes/localities/sorong/red-adult.webp"]}, "Timika": {"juvenile.Red": ["/hatchery/snakes/localities/timika/red-neonate.webp"], "adult.Red": ["/hatchery/snakes/localities/timika/blue-adult.webp"]}, "Kofiau": {"juvenile.Yellow": ["/hatchery/snakes/localities/kofiau/yellow-neonate.webp"], "adult.Yellow": ["/hatchery/snakes/localities/kofiau/yellow-adult-5.webp", "/hatchery/snakes/localities/kofiau/yellow-adult-1.webp", "/hatchery/snakes/localities/kofiau/yellow-adult-2.webp", "/hatchery/snakes/localities/kofiau/yellow-adult-3.webp", "/hatchery/snakes/localities/kofiau/yellow-adult-orig.webp", "/hatchery/snakes/localities/kofiau/yellow-adult-6.webp"]}, "Jayapura": {"juvenile.Red": ["/hatchery/snakes/localities/jayapura/red-neonate-1.webp", "/hatchery/snakes/localities/jayapura/red-neonate-2.webp", "/hatchery/snakes/localities/jayapura/red-neonate-4.webp"], "adult.Red": ["/hatchery/snakes/localities/jayapura/red-adult-3.webp", "/hatchery/snakes/localities/jayapura/red-adult.webp", "/hatchery/snakes/localities/jayapura/red-adult-2.webp", "/hatchery/snakes/localities/jayapura/red-adult-a-plus.webp"]}, "Biak": {"juvenile.Red": ["/hatchery/snakes/localities/biak/red-neonate.webp"]}, "Aru": {"juvenile.Yellow": ["/hatchery/snakes/localities/aru/yellow-neonate-2.webp"], "adultAny": ["/hatchery/snakes/localities/aru/adult-2.webp", "/hatchery/snakes/localities/aru/adult.webp", "/hatchery/snakes/localities/aru/adult-a-plus.webp"]}, "Merauke": {"juvenile.Yellow": ["/hatchery/snakes/localities/merauke/yellow-neonate-2.webp"], "adultAny": ["/hatchery/snakes/localities/merauke/adult.webp", "/hatchery/snakes/localities/merauke/yellow-adult.webp"]}, "Batanta": {"juvenile.Yellow": ["/hatchery/snakes/localities/batanta/yellow-neonate.webp", "/hatchery/snakes/localities/batanta/yellow-neonate-2.webp"]}, "Waigeo": {"juvenile.Yellow": ["/hatchery/snakes/localities/waigeo/yellow-neonate.webp"]}, "Designer": {"juvenile.Red": ["/hatchery/snakes/localities/designer/red-neonate.webp"], "adult.Red": ["/hatchery/snakes/localities/jayapura/red-adult.webp"]}, "Hybrid": {"juvenile.Red": ["/hatchery/snakes/localities/jayapura/red-neonate-1.webp"], "adult.Red": ["/hatchery/snakes/localities/hybrids/pulcher-utaraensis-red-adult.webp"]}};
+function buildWheel() {
+  const wheel = document.getElementById('wheel');
+  let html = '';
+  const locs = Object.keys(poolData).sort();
+  let totalPools = 0, totalVariants = 0;
+  for (const loc of locs) {
+    const pools = poolData[loc];
+    const poolNames = Object.keys(pools).sort();
+    totalPools += poolNames.length;
+    html += `<h2>${loc}</h2><div class="grid">`;
+    for (const pool of poolNames) {
+      const variants = pools[pool];
+      totalVariants += variants.length;
+      const first = variants[0];
+      const fname = first.split('/').pop();
+      const displayPool = pool.replace('.', ' ').replace('Any', ' (any)');
+      html += `<div class="card" onclick="showVariants('${loc}', '${pool}')">
+        <img src="${first}" loading="lazy" alt="${fname}">
+        <div class="label"><strong>${displayPool}</strong>
+        <span class="badge">${variants.length} variant${variants.length > 1 ? 's' : ''}</span></div></div>`;
+    }
+    html += '</div>';
+  }
+  wheel.innerHTML = html;
+  document.querySelector('.count').textContent =
+    `${totalPools} pools, ${totalVariants} variants wired — click any pool to see all its variants`;
+}
+function showVariants(loc, pool) {
+  const variants = poolData[loc][pool];
+  document.getElementById('modal-title').textContent = `${loc} — ${pool.replace('.', ' ')} (${variants.length})`;
+  document.getElementById('modal-grid').innerHTML = variants.map(v => {
+    const fname = v.split('/').pop();
+    return `<div class="variant-card"><img src="${v}" loading="lazy"><div class="vlabel">${fname}<br>${v}</div></div>`;
+  }).join('');
+  document.getElementById('modal').classList.add('active');
+}
+function closeModal() { document.getElementById('modal').classList.remove('active'); }
+document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+buildWheel();
+</script></body></html>
