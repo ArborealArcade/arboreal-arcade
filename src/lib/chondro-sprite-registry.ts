@@ -55,10 +55,10 @@ const spritePathFallbacks: Record<string, string[]> = {};
 const localitySprites: Record<string, StageSpriteSet> = {
   Lereh: {
     juvenile: {
-      Red: [
-      ],
-      Yellow: [
-      ],
+      Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Lereh art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Lereh art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),],
     },
     adult: {
       Red: [
@@ -71,15 +71,16 @@ const localitySprites: Record<string, StageSpriteSet> = {
   },
   Wamena: {
     juvenile: {
-      Red: [
-      ],
-      Yellow: [
-      ],
+      Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Wamena art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Wamena art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),],
     },
     adult: {
       Red: [        variant("/hatchery/snakes/localities/wamena/red-adult-orig.webp"),
         variant("/hatchery/snakes/localities/wamena/wamena-aru-cross-orig.webp"),],
-      Yellow: [],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Wamena art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
   },
   Cyclops: {
@@ -100,28 +101,29 @@ const localitySprites: Record<string, StageSpriteSet> = {
   },
   Manokwari: {
     juvenile: {
-      Red: [
-      ],
-      Yellow: [
-      ],
+      Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Manokwari art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Manokwari art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),],
     },
     adult: {
       Red: [
         variant("/hatchery/snakes/localities/manokwari/red-adult-2.webp", { maxPhenotypeScore: 84 }),
       ],
-      Yellow: [
-      ],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Manokwari art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
   },
   Arfak: {
     juvenile: {
       Red: [
         // Dedicated Arfak art (2026-09-30 pack).
-      ],
+        // PLACEHOLDER: Jayapura sprite until dedicated Arfak art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),],
       // Owner 2026-09-26: Yellow Arfak juveniles use the Yellow Manokwari neonate sprite
       // (both purged 2026-10-16; rule resumes when remakes land).
-      Yellow: [
-      ],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Arfak art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),],
     },
     adult: {
       Red: [
@@ -130,23 +132,25 @@ const localitySprites: Record<string, StageSpriteSet> = {
       ],
       // Owner 2026-09-26: Yellow Arfak adults use the Yellow Manokwari adult sprite (no random pick)
       // (both purged 2026-10-16; rule resumes when remakes land).
-      Yellow: [],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Arfak art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
     adultAny: [],
   },
   Sorong: {
     juvenile: {
-      Red: [
-      ],
-      Yellow: [
-      ],
+      Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Sorong art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Sorong art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),],
     },
     adult: {
       Red: [
         // Green adult, hatchling color unconfirmed (move pools if the owner says otherwise).
-      ],
-      Yellow: [
-      ],
+        // PLACEHOLDER: Jayapura sprite until dedicated Sorong art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-adult.webp"),],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Sorong art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
   },
   Timika: {
@@ -159,9 +163,10 @@ const localitySprites: Record<string, StageSpriteSet> = {
     adult: {
       Red: [
         // Blue-phase adult variant (hatchling color unconfirmed; move pools if the owner says otherwise).
-      ],
-      Yellow: [
-      ],
+        // PLACEHOLDER: Jayapura sprite until dedicated Timika art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-adult.webp"),],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Timika art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
   },
   Kofiau: {
@@ -199,42 +204,48 @@ const localitySprites: Record<string, StageSpriteSet> = {
   Yapen: {
     juvenile: {
       // Dedicated Yapen red-neonate art still needed (purged 2026-10-16).
-      Red: [
-      ],
+      Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Yapen art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/yapen/yellow-neonate-3.webp"),
         variant("/hatchery/snakes/localities/yapen/yellow-neonate-orig.webp"),],
     },
     adult: {
       // Dedicated Yapen adult art still needed (purged 2026-10-16).
-      Red: [
-      ],
-      Yellow: [
-      ],
+      Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Yapen art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-adult.webp"),],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Yapen art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
   },
   Biak: {
     juvenile: {
-      Red: [
-      ],
-      Yellow: [],
+      Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Biak art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Biak art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),],
     },
     adult: {
-      Red: [],
-      Yellow: [
-      ],
+      Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Biak art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-adult.webp"),],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Biak art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
   },
   Numfor: {
     // Owner rule: Numfor uses Biak art until dedicated Numfor art is produced
     // (both purged 2026-10-16; rule resumes when remakes land).
     juvenile: {
-      Red: [],
-      Yellow: [],
+      Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Numfor art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Numfor art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),],
     },
     adult: {
-      Red: [],
-      Yellow: [],
+      Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Numfor art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-adult.webp"),],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Numfor art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
   },
   Aru: {
@@ -283,20 +294,25 @@ const localitySprites: Record<string, StageSpriteSet> = {
       ],
     },
     adult: {
-      Red: [],
-      Yellow: [],
+      Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Designer art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-adult.webp"),],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Designer art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
   },
   Hybrid: {
     juvenile: {
-      Red: [],
-      Yellow: [],
+      Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Hybrid art is made.
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Hybrid art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),],
     },
     adult: {
       Red: [
         variant("/hatchery/snakes/localities/hybrids/pulcher-utaraensis-red-adult.webp"),
       ],
-      Yellow: [],
+      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Hybrid art is made.
+        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
   },
 };
