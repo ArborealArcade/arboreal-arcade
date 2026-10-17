@@ -56,7 +56,6 @@ const localitySprites: Record<string, StageSpriteSet> = {
   Lereh: {
     juvenile: {
       Red: [
-        variant("/hatchery/snakes/localities/lereh/red-neonate.webp"),
       ],
       Yellow: [
       ],
@@ -88,9 +87,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Red: [        variant("/hatchery/snakes/localities/cyclops/red-neonate-2.webp"),
         variant("/hatchery/snakes/localities/cyclops/red-neonate-3.webp"),
         variant("/hatchery/snakes/recovered-v7/cyclops/red-neonate.webp"),],
-      Yellow: [
-        variant("/hatchery/snakes/localities/cyclops/yellow-neonate-2.webp"),
-        variant("/hatchery/snakes/localities/cyclops/yellow-neonate.webp"),],
+      Yellow: [        variant("/hatchery/snakes/localities/cyclops/yellow-neonate.webp"),],
     },
     adult: {
       Red: [
@@ -109,7 +106,6 @@ const localitySprites: Record<string, StageSpriteSet> = {
         variant("/hatchery/snakes/localities/manokwari/red-neonate.webp"),
       ],
       Yellow: [
-        variant("/hatchery/snakes/localities/manokwari/yellow-neonate.webp"),
       ],
     },
     adult: {
@@ -117,7 +113,6 @@ const localitySprites: Record<string, StageSpriteSet> = {
         variant("/hatchery/snakes/localities/manokwari/red-adult-2.webp", { maxPhenotypeScore: 84 }),
       ],
       Yellow: [
-        variant("/hatchery/snakes/localities/manokwari/yellow-adult.webp"),
       ],
     },
   },
@@ -125,7 +120,6 @@ const localitySprites: Record<string, StageSpriteSet> = {
     juvenile: {
       Red: [
         // Dedicated Arfak art (2026-09-30 pack).
-        variant("/hatchery/snakes/localities/arfak/red-neonate.webp"),
       ],
       // Owner 2026-09-26: Yellow Arfak juveniles use the Yellow Manokwari neonate sprite
       // (both purged 2026-10-16; rule resumes when remakes land).
@@ -192,15 +186,9 @@ const localitySprites: Record<string, StageSpriteSet> = {
   },
   Jayapura: {
     juvenile: {
-      Red: [
-        variant("/hatchery/snakes/localities/jayapura/red-neonate.webp"),
-        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),
-        variant("/hatchery/snakes/localities/jayapura/red-neonate-2.webp"),
-        variant("/hatchery/snakes/localities/jayapura/red-neonate-3.webp"),
-        variant("/hatchery/snakes/localities/jayapura/red-neonate-4.webp"),],
-      Yellow: [
-        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-3.webp"),
-        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),
+      Red: [        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-2.webp"),        variant("/hatchery/snakes/localities/jayapura/red-neonate-4.webp"),],
+      Yellow: [        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),
         variant("/hatchery/snakes/localities/jayapura/yellow-neonate-2.webp"),],
     },
     adult: {
