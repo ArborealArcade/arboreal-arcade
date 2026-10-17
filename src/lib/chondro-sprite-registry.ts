@@ -566,6 +566,28 @@ export function chondroSpecificSpriteCandidatesFor(request: ChondroSpriteRequest
     .filter((path, index, paths) => paths.indexOf(path) === index);
 }
 
+/**
+ * Returns ALL variant paths for a given locality pool (for the variant viewer).
+ * Used by the shop Sprite QA to show every wired variant when a card is clicked.
+ */
+export function getPoolVariants(
+  locality: string,
+  lifeStage: ChondroLifeStage,
+  neonateColor?: ChondroNeonateColor,
+): string[] {
+  const set = localitySprites[locality];
+  if (!set) return [];
+  const request: ChondroSpriteRequest = {
+    subspecies: "Morelia azurea pulcher",
+    locality,
+    lifeStage,
+    neonateColor,
+  };
+  const pool = poolForStage(set, request);
+  if (!pool) return [];
+  return pool.map((v) => v.path);
+}
+
 export const CHONDRO_SPRITE_ASSET_PLAN = {
   special: {
   },

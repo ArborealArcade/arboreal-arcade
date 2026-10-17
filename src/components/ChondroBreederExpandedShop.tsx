@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { ChondroSnakeIcon } from "@/components/ChondroSnakeIcon";
+import { getPoolVariants } from "@/lib/chondro-sprite-registry";
 import { animalHousingCapacity, canHouseAnimal, enclosureFootprint, openAnimalSlots, roomCapacityFromSave } from "@/lib/chondro-facility-limits";
 import { markStockRotated, playHankScaleLine } from "@/lib/hank-scale-voice";
 
@@ -493,6 +494,8 @@ async function persistStandaloneShopSave(save: GameSave, authenticated: boolean)
 export function ChondroBreederExpandedShop({ section, layout }: { section?: "qa" | "enclosures" | "snakes"; layout?: "stack" | "carousel" }) {
   const carousel = layout === "carousel";
   const [save, setSave] = useState<GameSave | null>(null);
+  // Variant viewer: click a Sprite QA card to see all wired variants for that pool
+  const [variantModal, setVariantModal] = useState<{ label: string; detail: string; variants: string[] } | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
   // Founder/testing allowlist: unlimited snake housing spaces, checked
   // server-side via /api/canopy-hunter/status so it follows the account.
@@ -833,7 +836,18 @@ export function ChondroBreederExpandedShop({ section, layout }: { section?: "qa"
           className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-3 [scrollbar-width:thin] [scrollbar-color:rgba(196,181,253,.28)_transparent]"
         >
           {spriteQaItems.map((item) => (
-            <article key={item.id} className="w-[60%] shrink-0 snap-start rounded-2xl border border-white/[.065] bg-black/15 p-2 sm:w-[200px]">
+            <article
+              key={item.id}
+              className="w-[60%] shrink-0 snap-start cursor-pointer rounded-2xl border border-white/[.065] bg-black/15 p-2 transition-transform hover:scale-[1.02] hover:border-violet-300/30 sm:w-[200px]"
+              onClick={() => {
+                if (!item.locality) return;
+                const variants = getPoolVariants(item.locality, item.lifeStage, item.neonateColor);
+                if (variants.length > 0) {
+                  setVariantModal({ label: item.label, detail: item.detail, variants });
+                }
+              }}
+              title="Click to see all variants"
+            >
               <ChondroSnakeIcon
                 subspecies={item.subspecies}
                 name={item.label}
@@ -858,6 +872,46 @@ export function ChondroBreederExpandedShop({ section, layout }: { section?: "qa"
         </div>
       </section>
       ) : null}
+
+      {/* Variant viewer modal */}
+      {variantModal ? createPortal(
+        <div
+          className="fixed inset-0 z-[100] overflow-y-auto bg-black/90 p-4"
+          onClick={() => setVariantModal(null)}
+        >
+          <div
+            className="mx-auto max-w-4xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-white">{variantModal.label}</h3>
+                <p className="mt-1 text-xs text-white/50">{variantModal.detail}</p>
+                <p className="mt-1 text-xs font-bold text-violet-200/70">{variantModal.variants.length} variant{variantModal.variants.length > 1 ? "s" : ""} wired</p>
+              </div>
+              <button
+                onClick={() => setVariantModal(null)}
+                className="rounded-full border border-white/20 px-4 py-2 text-sm text-white/70 hover:bg-white/10"
+              >
+                ✕ Close
+              </button>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {variantModal.variants.map((v) => {
+                const fname = v.split("/").pop() ?? v;
+                return (
+                  <div key={v} className="overflow-hidden rounded-xl border border-white/10 bg-black/40">
+                    <img src={v} alt={fname} className="aspect-square w-full object-contain bg-black" loading="lazy" />
+                    <div className="p-2 text-[10px] break-all text-white/40">{fname}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>,
+        document.body
+      ) : null}
+
       {(!section || section === "enclosures") ? (
       <section className={carousel ? "h-full overflow-x-hidden overflow-y-auto rounded-[22px] border border-emerald-300/15 bg-[radial-gradient(circle_at_top_left,rgba(52,211,153,.08),transparent_38%),#07110d] p-2.5 sm:overflow-hidden" : "mb-4 overflow-hidden rounded-[26px] border border-emerald-300/15 bg-[radial-gradient(circle_at_top_left,rgba(52,211,153,.08),transparent_38%),#07110d] p-4 sm:p-5"}>
         {carousel ? (
