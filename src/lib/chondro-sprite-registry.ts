@@ -109,6 +109,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
     adult: {
       Red: [
         variant("/hatchery/snakes/localities/manokwari/red-adult-2.webp", { maxPhenotypeScore: 84 }),
+        variant("/hatchery/snakes/localities/manokwari/red-adult.webp"),
       ],
       Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Manokwari art is made.
         variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
@@ -117,9 +118,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
   Arfak: {
     juvenile: {
       Red: [
-        // Dedicated Arfak art (2026-09-30 pack).
-        // PLACEHOLDER: Jayapura sprite until dedicated Arfak art is made.
-        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),],
+        variant("/hatchery/snakes/localities/arfak/red-neonate.webp"),],
       // Owner 2026-09-26: Yellow Arfak juveniles use the Yellow Manokwari neonate sprite
       // (both purged 2026-10-16; rule resumes when remakes land).
       Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Arfak art is made.
@@ -162,9 +161,8 @@ const localitySprites: Record<string, StageSpriteSet> = {
     },
     adult: {
       Red: [
-        // Blue-phase adult variant (hatchling color unconfirmed; move pools if the owner says otherwise).
-        // PLACEHOLDER: Jayapura sprite until dedicated Timika art is made.
-        variant("/hatchery/snakes/localities/jayapura/red-adult.webp"),],
+        // Blue-phase adult from 09-30 pack.
+        variant("/hatchery/snakes/localities/timika/blue-adult.webp"),],
       Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Timika art is made.
         variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
@@ -220,16 +218,16 @@ const localitySprites: Record<string, StageSpriteSet> = {
   },
   Biak: {
     juvenile: {
-      Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Biak art is made.
-        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),],
+      Red: [
+        variant("/hatchery/snakes/localities/biak/red-neonate.webp"),],
       Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Biak art is made.
         variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),],
     },
     adult: {
       Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Biak art is made.
         variant("/hatchery/snakes/localities/jayapura/red-adult.webp"),],
-      Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Biak art is made.
-        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
+      Yellow: [
+        variant("/hatchery/snakes/localities/biak/yellow-adult.webp"),],
     },
   },
   Numfor: {
