@@ -63,7 +63,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
     adult: {
       Red: [
         variant("/hatchery/snakes/localities/lereh/red-adult-2.webp"),
-        variant("/hatchery/snakes/localities/lereh/red-adult.webp"),],
+        ],
       Yellow: [
         variant("/hatchery/snakes/localities/lereh/yellow-adult-2.webp"),
       ],
@@ -72,13 +72,14 @@ const localitySprites: Record<string, StageSpriteSet> = {
   Wamena: {
     juvenile: {
       Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Wamena art is made.
-        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),],
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),
+        variant("/hatchery/snakes/localities/wamena/red-neonate-wamena-aru.webp"),],
       Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Wamena art is made.
         variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),],
     },
     adult: {
       Red: [        variant("/hatchery/snakes/localities/wamena/red-adult-orig.webp"),
-        variant("/hatchery/snakes/localities/wamena/wamena-aru-cross-orig.webp"),],
+        ],
       Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Wamena art is made.
         variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
@@ -86,7 +87,8 @@ const localitySprites: Record<string, StageSpriteSet> = {
   Cyclops: {
     juvenile: {
       Red: [        variant("/hatchery/snakes/localities/cyclops/red-neonate-2.webp"),
-        variant("/hatchery/snakes/localities/cyclops/red-neonate-3.webp"),],
+        variant("/hatchery/snakes/localities/cyclops/red-neonate-3.webp"),
+        variant("/hatchery/snakes/localities/cyclops/red-neonate.webp"),],
       Yellow: [        variant("/hatchery/snakes/localities/cyclops/yellow-neonate.webp"),],
     },
     adult: {
