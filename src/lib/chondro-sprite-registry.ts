@@ -161,7 +161,8 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Red: [
         // Blue-phase adult from 09-30 pack.
         variant("/hatchery/snakes/localities/timika/blue-adult.webp"),
-        variant("/hatchery/snakes/localities/timika/red-adult.webp"),],
+        variant("/hatchery/snakes/localities/timika/red-adult.webp"),
+        variant("/hatchery/snakes/localities/timika/blue-adult-2.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/timika/yellow-adult.webp"),],
     },
@@ -251,7 +252,8 @@ const localitySprites: Record<string, StageSpriteSet> = {
     juvenile: {
       Yellow: [
         variant("/hatchery/snakes/localities/aru/yellow-neonate-2.webp"),
-      ],
+        variant("/hatchery/snakes/localities/aru/yellow-neonate.webp"),
+        variant("/hatchery/snakes/localities/aru/yellow-neonate-3.webp"),],
     },
     adultAny: [
       variant("/hatchery/snakes/localities/aru/adult-2.webp"),
@@ -296,7 +298,9 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Red: [        // PLACEHOLDER: Jayapura sprite until dedicated Designer art is made.
         variant("/hatchery/snakes/localities/jayapura/red-adult.webp"),],
       Yellow: [        // PLACEHOLDER: Jayapura sprite until dedicated Designer art is made.
-        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
+        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),
+        variant("/hatchery/snakes/localities/designer/yellow-adult.webp"),
+        variant("/hatchery/snakes/localities/designer/yellow-adult-2.webp"),],
     },
   },
   Hybrid: {
