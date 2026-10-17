@@ -85,16 +85,14 @@ const localitySprites: Record<string, StageSpriteSet> = {
   Cyclops: {
     juvenile: {
       Red: [        variant("/hatchery/snakes/localities/cyclops/red-neonate-2.webp"),
-        variant("/hatchery/snakes/localities/cyclops/red-neonate-3.webp"),
-        variant("/hatchery/snakes/recovered-v7/cyclops/red-neonate.webp"),],
+        variant("/hatchery/snakes/localities/cyclops/red-neonate-3.webp"),],
       Yellow: [        variant("/hatchery/snakes/localities/cyclops/yellow-neonate.webp"),],
     },
     adult: {
       Red: [
         variant("/hatchery/snakes/localities/cyclops/red-adult-6.webp"),        variant("/hatchery/snakes/localities/cyclops/red-adult-1.webp"),
         variant("/hatchery/snakes/localities/cyclops/red-adult-2.webp"),
-        variant("/hatchery/snakes/localities/cyclops/red-adult-3.webp"),
-        variant("/hatchery/snakes/localities/cyclops/red-adult-4.webp"),],
+        variant("/hatchery/snakes/localities/cyclops/red-adult-3.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/cyclops/yellow-adult.webp"),
         variant("/hatchery/snakes/localities/cyclops/yellow-adult-2.webp"),],
@@ -146,7 +144,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
     adult: {
       Red: [
         // Green adult, hatchling color unconfirmed (move pools if the owner says otherwise).
-        variant("/hatchery/snakes/localities/sorong/red-adult-4.webp"),],
+      ],
       Yellow: [
       ],
     },
@@ -161,7 +159,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
     adult: {
       Red: [
         // Blue-phase adult variant (hatchling color unconfirmed; move pools if the owner says otherwise).
-        variant("/hatchery/snakes/localities/timika/blue-adult.webp"),],
+      ],
       Yellow: [
       ],
     },
@@ -192,8 +190,10 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Red: [
         variant("/hatchery/snakes/localities/jayapura/red-adult-3.webp"),
         variant("/hatchery/snakes/localities/jayapura/red-adult.webp"),
-        variant("/hatchery/snakes/localities/jayapura/red-adult-2.webp"),],
-      Yellow: [        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
+        variant("/hatchery/snakes/localities/jayapura/red-adult-2.webp"),
+        variant("/hatchery/snakes/localities/jayapura/red-adult-a-plus.webp"),],
+      Yellow: [        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),
+        variant("/hatchery/snakes/localities/jayapura/yellow-adult-a-plus.webp"),],
     },
   },
   Yapen: {
@@ -203,8 +203,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
       ],
       Yellow: [
         variant("/hatchery/snakes/localities/yapen/yellow-neonate-3.webp"),
-        variant("/hatchery/snakes/localities/yapen/yellow-neonate-orig.webp"),
-        variant("/hatchery/snakes/localities/yapen/yellow-neonate-2-orig.webp"),],
+        variant("/hatchery/snakes/localities/yapen/yellow-neonate-orig.webp"),],
     },
     adult: {
       // Dedicated Yapen adult art still needed (purged 2026-10-16).
