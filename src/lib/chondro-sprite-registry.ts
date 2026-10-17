@@ -91,7 +91,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
     },
     adult: {
       Red: [
-        variant("/hatchery/snakes/localities/cyclops/red-adult-6.webp"),        variant("/hatchery/snakes/localities/cyclops/red-adult-1.webp"),
+                variant("/hatchery/snakes/localities/cyclops/red-adult-1.webp"),
         variant("/hatchery/snakes/localities/cyclops/red-adult-2.webp"),
         variant("/hatchery/snakes/localities/cyclops/red-adult-3.webp"),
         // Blue-phase variant from 09-30 Specials pack.
