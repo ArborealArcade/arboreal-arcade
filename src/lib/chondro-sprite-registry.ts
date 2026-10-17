@@ -113,7 +113,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
     adult: {
       Red: [
         variant("/hatchery/snakes/localities/manokwari/red-adult-2.webp", { maxPhenotypeScore: 84 }),
-        variant("/hatchery/snakes/localities/manokwari/red-adult.webp"),
+        
         variant("/hatchery/snakes/localities/manokwari/red-adult-a-plus.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/manokwari/yellow-adult.webp"),],
@@ -122,12 +122,11 @@ const localitySprites: Record<string, StageSpriteSet> = {
   Arfak: {
     juvenile: {
       Red: [
-        // PLACEHOLDER: Manokwari sprite until dedicated Arfak art is made.
-        variant("/hatchery/snakes/localities/manokwari/red-neonate.webp"),],
+        variant("/hatchery/snakes/localities/arfak/red-neonate.webp"),],
       // Owner 2026-09-26: Yellow Arfak juveniles use the Yellow Manokwari neonate sprite
       // (both purged 2026-10-16; rule resumes when remakes land).
       Yellow: [
-        variant("/hatchery/snakes/localities/arfak/yellow-neonate.webp"),],
+        ],
     },
     adult: {
       Red: [
@@ -151,7 +150,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
     adult: {
       Red: [
         // PLACEHOLDER: Manokwari sprite until dedicated Sorong art is made.
-        variant("/hatchery/snakes/localities/manokwari/red-adult.webp"),],
+        ],
       Yellow: [
         variant("/hatchery/snakes/localities/sorong/yellow-adult.webp"),
         variant("/hatchery/snakes/localities/sorong/yellow-adult-a-plus.webp"),
