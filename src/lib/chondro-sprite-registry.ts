@@ -216,7 +216,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Yellow: [
         variant("/hatchery/snakes/localities/yapen/yellow-neonate-3.webp"),
         variant("/hatchery/snakes/localities/yapen/yellow-neonate-orig.webp"),
-        variant("/hatchery/snakes/localities/yapen/yellow-neonate-4.webp"),],
+        ],
     },
     adult: {
       // Dedicated Yapen adult art still needed (purged 2026-10-16).
@@ -262,7 +262,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
   Aru: {
     juvenile: {
       Yellow: [
-        variant("/hatchery/snakes/localities/aru/yellow-neonate-2.webp"),
+        
         variant("/hatchery/snakes/localities/aru/yellow-neonate.webp"),
         variant("/hatchery/snakes/localities/aru/yellow-neonate-3.webp"),],
     },
@@ -274,7 +274,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
   Merauke: {
     juvenile: {
       Yellow: [
-        variant("/hatchery/snakes/localities/merauke/yellow-neonate-2.webp"),
+        
         variant("/hatchery/snakes/localities/merauke/yellow-neonate.webp"),],
     },
     // adult.webp replaced 2026-10-16 with the clean 09-30 pack art (was a painted-background version).
