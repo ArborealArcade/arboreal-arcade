@@ -65,7 +65,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
     adult: {
       Red: [
         variant("/hatchery/snakes/localities/lereh/red-adult-2.webp"),
-      ],
+        variant("/hatchery/snakes/localities/lereh/red-adult.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/lereh/yellow-adult-2.webp"),
       ],
@@ -90,18 +90,23 @@ const localitySprites: Record<string, StageSpriteSet> = {
     juvenile: {
       Red: [
         variant("/hatchery/snakes/recovered-v7/cyclops/red-neonate.webp"),
-      ],
+        variant("/hatchery/snakes/localities/cyclops/red-neonate-2.webp"),
+        variant("/hatchery/snakes/localities/cyclops/red-neonate-3.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/cyclops/yellow-neonate-2.webp"),
-      ],
+        variant("/hatchery/snakes/localities/cyclops/yellow-neonate.webp"),],
     },
     adult: {
       Red: [
         variant("/hatchery/snakes/localities/cyclops/red-adult-6.webp"),
-      ],
+        variant("/hatchery/snakes/localities/cyclops/red-adult.webp"),
+        variant("/hatchery/snakes/localities/cyclops/red-adult-1.webp"),
+        variant("/hatchery/snakes/localities/cyclops/red-adult-2.webp"),
+        variant("/hatchery/snakes/localities/cyclops/red-adult-3.webp"),
+        variant("/hatchery/snakes/localities/cyclops/red-adult-4.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/cyclops/yellow-adult.webp"),
-      ],
+        variant("/hatchery/snakes/localities/cyclops/yellow-adult-2.webp"),],
     },
   },
   Manokwari: {
@@ -156,7 +161,9 @@ const localitySprites: Record<string, StageSpriteSet> = {
       Red: [
         // Green adult, hatchling color unconfirmed (move pools if the owner says otherwise).
         variant("/hatchery/snakes/localities/sorong/red-adult-4.webp"),
-      ],
+        variant("/hatchery/snakes/localities/sorong/red-adult.webp"),
+        variant("/hatchery/snakes/localities/sorong/red-adult-1.webp"),
+        variant("/hatchery/snakes/localities/sorong/red-adult-2.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/sorong/yellow-adult.webp"),
       ],
@@ -165,6 +172,7 @@ const localitySprites: Record<string, StageSpriteSet> = {
   Timika: {
     juvenile: {
       Red: [
+        variant("/hatchery/snakes/localities/timika/red-neonate.webp"),
       ],
       Yellow: [
         variant("/hatchery/snakes/localities/timika/yellow-neonate.webp"),
@@ -189,25 +197,32 @@ const localitySprites: Record<string, StageSpriteSet> = {
     adult: {
       Yellow: [
         variant("/hatchery/snakes/localities/kofiau/yellow-adult-5.webp"),
-      ],
+        variant("/hatchery/snakes/localities/kofiau/yellow-adult-1.webp"),
+        variant("/hatchery/snakes/localities/kofiau/yellow-adult-2.webp"),
+        variant("/hatchery/snakes/localities/kofiau/yellow-adult-3.webp"),],
     },
   },
   Jayapura: {
     juvenile: {
       Red: [
         variant("/hatchery/snakes/localities/jayapura/red-neonate.webp"),
-      ],
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-1.webp"),
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-2.webp"),
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-3.webp"),
+        variant("/hatchery/snakes/localities/jayapura/red-neonate-4.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/jayapura/yellow-neonate-3.webp"),
-      ],
+        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-1.webp"),
+        variant("/hatchery/snakes/localities/jayapura/yellow-neonate-2.webp"),],
     },
     adult: {
       Red: [
         variant("/hatchery/snakes/localities/jayapura/red-adult-3.webp"),
-      ],
+        variant("/hatchery/snakes/localities/jayapura/red-adult.webp"),
+        variant("/hatchery/snakes/localities/jayapura/red-adult-2.webp"),],
       Yellow: [
         variant("/hatchery/snakes/localities/jayapura/yellow-adult.webp"),
-      ],
+        variant("/hatchery/snakes/localities/jayapura/yellow-adult-2.webp"),],
     },
   },
   Yapen: {
